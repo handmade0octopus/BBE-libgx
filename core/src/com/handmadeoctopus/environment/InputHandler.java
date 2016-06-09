@@ -48,7 +48,7 @@ public class InputHandler implements InputProcessor {
         if (Gdx.input.isTouched(0)) {
             zoom.x = Gdx.input.getX(0);
             zoom.y = Gdx.input.getY(0);
-            slidingMenu.onClick(x, y);
+            slidingMenu.onClick(Gdx.input.getX(0), Gdx.graphics.getHeight() - Gdx.input.getY(0));
         }
         if (Gdx.input.isTouched(1)) {
             zoom.x1 = Gdx.input.getX(1);
@@ -68,11 +68,6 @@ public class InputHandler implements InputProcessor {
     @Override
     public boolean touchDragged(int screenX, int screenY, int pointer) {
         if (Gdx.input.isTouched(0) && Gdx.input.isTouched(1)) {
-          /*x = camera.unproject(new Vector3(Gdx.input.getX(0), Gdx.input.getY(0), 0)).x;
-            y = camera.unproject(new Vector3(Gdx.input.getX(0), Gdx.input.getY(0), 0)).y;
-            x1 = camera.unproject(new Vector3(Gdx.input.getX(1), Gdx.input.getY(1), 0)).x;
-            y1 = camera.unproject(new Vector3(Gdx.input.getX(1), Gdx.input.getY(1), 0)).y;
-            zoom.dragged(x, y, x1, y1);  */
             zoom.dragged(Gdx.input.getX(0), Gdx.input.getY(0), Gdx.input.getX(1), Gdx.input.getY(1));
         }
         return false;
@@ -92,7 +87,7 @@ public class InputHandler implements InputProcessor {
         return false;
     }
 
-    public void draw() {
+    public void drawUi() {
         slidingMenu.draw();
     }
 }

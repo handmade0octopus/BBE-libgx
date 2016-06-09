@@ -18,7 +18,7 @@ import com.handmadeoctopus.BouncingBallEngine;
 
 public class MainScreen implements Screen {
 
-    SpriteBatch batch;
+    SpriteBatch batch, batchUi;
     Game game;
     Image img;
     OrthographicCamera camera;
@@ -46,6 +46,7 @@ public class MainScreen implements Screen {
         zoom = new Zoom(camera);
 
         batch = new SpriteBatch();
+        batchUi = new SpriteBatch();
 
         img = new Image(new Texture("badlogic.jpg"));
         img.setSize(width, width*(img.getHeight()/img.getWidth()));
@@ -53,7 +54,7 @@ public class MainScreen implements Screen {
 
         renderer = new ShapeRenderer();
 
-        stage = new Stage(new StretchViewport(width, height, camera));
+        stage = new Stage();
 
         handler = new InputHandler(camera, zoom, stage);
 
@@ -98,10 +99,12 @@ public class MainScreen implements Screen {
 
     private void draw() {
         batch.begin();
-
-        handler.draw();
-
         batch.end();
+
+        batchUi.begin();
+        handler.drawUi();
+        batchUi.end();
+
     }
 
     @Override
