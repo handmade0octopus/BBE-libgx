@@ -21,7 +21,7 @@ public class SlidingMenu {
         TextButton.TextButtonStyle textButtonStyle;
         InputHandler handler;
         int inter = 0;
-        boolean visible = false, menuOff = true;
+        boolean visible = false, menuOn = false;
 
         public SlidingMenu(final Stage stage, final InputHandler handler) {
                 this.stage = stage;
@@ -61,7 +61,8 @@ public class SlidingMenu {
                 textButton.setHeight(50);
                 textButton.setPosition(stage.getWidth()-textButton.getWidth(), stage.getHeight()-textButton.getHeight());
                 stage.addActor(textButton);
-                stage.addAction(Actions.alpha(0));
+                stage.addAction(Actions.alpha(0.2f));
+
 
 
                 // Add a listener to the button. ChangeListener is fired when the button's checked state changes, eg when clicked,
@@ -72,10 +73,10 @@ public class SlidingMenu {
 
                         public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
                                 Gdx.input.setInputProcessor(handler);
-                                menuOff = true;
+                                menuOn = false;
                                 visible = false;
                                 inter = 0;
-                                stage.addAction(Actions.fadeOut(0.5f));
+                                stage.addAction(new SequenceAction(Actions.fadeOut(0.5f), Actions.alpha(0.2f)));
                                 textButton.setChecked(false);
                                 return true;
                         }
@@ -85,9 +86,9 @@ public class SlidingMenu {
         public void draw() {
                 stage.act(Math.min(Gdx.graphics.getDeltaTime(), 1/30f));
                 stage.draw();
-                if (visible && menuOff) { inter++; }
+                if (visible && !menuOn) { inter++; }
                 if (inter >= 100) {
-                        stage.addAction(Actions.fadeOut(0.5f));
+                        stage.addAction(new SequenceAction(Actions.fadeOut(0.5f), Actions.alpha(0.2f)));
                         visible = false;
                         inter = 0;
                 }
@@ -95,19 +96,29 @@ public class SlidingMenu {
 
         public void setInputProcessor() {
                 Gdx.input.setInputProcessor(stage);
-
         }
 
         public void onClick(float x, float y) {
-                if(x > textButton.getX() && x < textButton.getX() + textButton.getWidth() && y > textButton.getY() && y < textButton.getY() + textButton.getHeight()) {
+                if(x > textButton.getX() && x < textButton.getX() + textButton.getWidth() && y > textButton.getY()
+                        && y < textButton.getY() + textButton.getHeight()) {
                         if (inter == 0) {
                                 stage.addAction(Actions.fadeIn(0.5f));
                                 visible = true;
                         }
                         if (inter > 0) {
                                 setInputProcessor();
-                                menuOff = false;
+                                menuOn = true;
                         }
                 }
+        }
+
+        public void update(float width, float height) {
+                float w = width;
+                float h = height;
+                float f = (h / w);
+                stage.getViewport().update((int) width, (int) height, true);
+                stage.getViewport().setWorldWidth(1000);
+                stage.getViewport().setWorldHeight(1000*f);
+                textButton.setPosition(stage.getViewport().getWorldWidth()-textButton.getWidth(), stage.getViewport().getWorldHeight()-textButton.getHeight());
         }
 }

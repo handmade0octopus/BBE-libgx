@@ -12,7 +12,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 
-import com.badlogic.gdx.utils.viewport.StretchViewport;
+import com.badlogic.gdx.utils.viewport.*;
 import com.handmadeoctopus.BouncingBallEngine;
 
 
@@ -21,7 +21,7 @@ public class MainScreen implements Screen {
     SpriteBatch batch, batchUi;
     Game game;
     Image img;
-    OrthographicCamera camera;
+    OrthographicCamera camera, uiCamera;
     Stage stage;
     ShapeRenderer renderer;
     Zoom zoom;
@@ -29,7 +29,6 @@ public class MainScreen implements Screen {
     private InputHandler handler;
 
     public float width, height;
-
 
 
     public MainScreen(Game game) {
@@ -43,6 +42,9 @@ public class MainScreen implements Screen {
         camera = new OrthographicCamera(width, height);
         camera.update();
 
+        uiCamera = new OrthographicCamera(width, height);
+        uiCamera.update();
+
         zoom = new Zoom(camera);
 
         batch = new SpriteBatch();
@@ -54,9 +56,9 @@ public class MainScreen implements Screen {
 
         renderer = new ShapeRenderer();
 
-        stage = new Stage();
+        stage = new Stage(new ExtendViewport(width, height, uiCamera));
 
-        handler = new InputHandler(camera, zoom, stage);
+        handler = new InputHandler(camera, uiCamera, zoom, stage);
 
         Gdx.input.setInputProcessor(handler);
     }
@@ -74,9 +76,11 @@ public class MainScreen implements Screen {
         Gdx.gl.glClearColor(1, 1, 1, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         camera.update();
+        uiCamera.update();
 
         batch.setProjectionMatrix(camera.combined);
         renderer.setProjectionMatrix(batch.getProjectionMatrix());
+        batchUi.setProjectionMatrix(uiCamera.combined);
 
 
 
@@ -98,13 +102,15 @@ public class MainScreen implements Screen {
     }
 
     private void draw() {
+        renderer.begin(ShapeRenderer.ShapeType.Filled);
+        renderer.end();
+
         batch.begin();
         batch.end();
 
         batchUi.begin();
         handler.drawUi();
         batchUi.end();
-
     }
 
     @Override
@@ -113,9 +119,16 @@ public class MainScreen implements Screen {
         float h = height;
         float f = (h / w);
         this.height = this.width * f;
+
         camera.setToOrtho(false, this.width, this.height);
         camera.position.set(camera.viewportWidth / 2f, camera.viewportHeight / 2f, 0);
         camera.update();
+
+
+        handler.update(width, height);
+        uiCamera.setToOrtho(false, this.width, this.height);
+        uiCamera.position.set(uiCamera.viewportWidth / 2f, uiCamera.viewportHeight / 2f, 0);
+        uiCamera.update();
     }
 
     @Override

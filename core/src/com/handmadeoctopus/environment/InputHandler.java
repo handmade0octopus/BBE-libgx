@@ -11,14 +11,15 @@ import com.handmadeoctopus.entities.*;
 public class InputHandler implements InputProcessor {
 
     boolean zooming = false;
-    OrthographicCamera camera;
+    OrthographicCamera camera, uiCamera;
     Zoom zoom;
     SlidingMenu slidingMenu;
     float x, y, x1, y1;
 
 
-    public InputHandler(OrthographicCamera camera, Zoom zoom, Stage stage) {
+    public InputHandler(OrthographicCamera camera, OrthographicCamera uiCamera, Zoom zoom, Stage stage) {
         this.camera = camera;
+        this.uiCamera = camera;
         this.zoom = zoom;
         this.slidingMenu = new SlidingMenu(stage, this);
     }
@@ -45,10 +46,14 @@ public class InputHandler implements InputProcessor {
         y = camera.unproject(new Vector3(Gdx.input.getX(0), Gdx.input.getY(0), 0)).y;
         x1 = camera.unproject(new Vector3(Gdx.input.getX(1), Gdx.input.getY(1), 0)).x;
         y1 = camera.unproject(new Vector3(Gdx.input.getX(1), Gdx.input.getY(1), 0)).y;
+
+        float z = uiCamera.viewportWidth/Gdx.graphics.getWidth();
+        float q = uiCamera.viewportHeight/Gdx.graphics.getHeight();
+
         if (Gdx.input.isTouched(0)) {
             zoom.x = Gdx.input.getX(0);
             zoom.y = Gdx.input.getY(0);
-            slidingMenu.onClick(Gdx.input.getX(0), Gdx.graphics.getHeight() - Gdx.input.getY(0));
+            slidingMenu.onClick(z*Gdx.input.getX(0), q*(Gdx.graphics.getHeight()-Gdx.input.getY(0)));
         }
         if (Gdx.input.isTouched(1)) {
             zoom.x1 = Gdx.input.getX(1);
@@ -90,4 +95,9 @@ public class InputHandler implements InputProcessor {
     public void drawUi() {
         slidingMenu.draw();
     }
+
+    public void update(float width, float height) {
+        slidingMenu.update(width, height);
+    }
+
 }
