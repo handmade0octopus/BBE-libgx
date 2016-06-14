@@ -25,6 +25,7 @@ public class MainScreen implements Screen {
     Stage stage;
     ShapeRenderer renderer;
     Zoom zoom;
+    Settings settings;
 
     private InputHandler handler;
 
@@ -58,7 +59,9 @@ public class MainScreen implements Screen {
 
         stage = new Stage(new ExtendViewport(width, height, uiCamera));
 
-        handler = new InputHandler(camera, uiCamera, zoom, stage);
+        settings = new Settings();
+
+        handler = new InputHandler(camera, uiCamera, zoom, stage, settings);
 
         Gdx.input.setInputProcessor(handler);
     }

@@ -14,14 +14,16 @@ public class InputHandler implements InputProcessor {
     OrthographicCamera camera, uiCamera;
     Zoom zoom;
     SlidingMenu slidingMenu;
+    Settings settings;
     float x, y, x1, y1;
 
 
-    public InputHandler(OrthographicCamera camera, OrthographicCamera uiCamera, Zoom zoom, Stage stage) {
+    public InputHandler(OrthographicCamera camera, OrthographicCamera uiCamera, Zoom zoom, Stage stage, Settings settings) {
         this.camera = camera;
         this.uiCamera = camera;
         this.zoom = zoom;
-        this.slidingMenu = new SlidingMenu(stage, this);
+        this.slidingMenu = new SlidingMenu(stage, this, settings);
+        this.settings = settings;
     }
 
 

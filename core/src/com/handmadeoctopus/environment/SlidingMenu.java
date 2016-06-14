@@ -20,12 +20,15 @@ public class SlidingMenu {
         TextButton textButton;
         TextButton.TextButtonStyle textButtonStyle;
         InputHandler handler;
+        Settings settings;
+        Menu menu;
         int inter = 0;
         boolean visible = false, menuOn = false;
 
-        public SlidingMenu(final Stage stage, final InputHandler handler) {
+        public SlidingMenu(final Stage stage, final InputHandler handler, Settings settings) {
                 this.stage = stage;
                 this.handler = handler;
+                this.settings = settings;
                 init();
         }
 
@@ -63,7 +66,7 @@ public class SlidingMenu {
                 stage.addActor(textButton);
                 stage.addAction(Actions.alpha(0.2f));
 
-
+                menu = new Menu(stage, skin, settings);
 
                 // Add a listener to the button. ChangeListener is fired when the button's checked state changes, eg when clicked,
                 // Button#setChecked() is called, via a key press, etc. If the event.cancel() is called, the checked state will be reverted.
@@ -116,9 +119,12 @@ public class SlidingMenu {
                 float w = width;
                 float h = height;
                 float f = (h / w);
+                float difference =  height - stage.getViewport().getWorldHeight();
+                float diff = stage.getViewport().getWorldWidth() - width;
                 stage.getViewport().update((int) width, (int) height, true);
                 stage.getViewport().setWorldWidth(1000);
                 stage.getViewport().setWorldHeight(1000*f);
                 textButton.setPosition(stage.getViewport().getWorldWidth()-textButton.getWidth(), stage.getViewport().getWorldHeight()-textButton.getHeight());
+                menu.update(difference + diff);
         }
 }
