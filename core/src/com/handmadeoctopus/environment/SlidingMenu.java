@@ -25,6 +25,7 @@ public class SlidingMenu {
         int inter = 0;
         boolean visible = false, menuOn = false;
 
+
         public SlidingMenu(final Stage stage, final InputHandler handler, Settings settings) {
                 this.stage = stage;
                 this.handler = handler;

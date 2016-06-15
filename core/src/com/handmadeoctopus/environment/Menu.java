@@ -3,11 +3,14 @@ package com.handmadeoctopus.environment;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.utils.Array;
+
 
 public class Menu {
     Stage stage;
@@ -16,6 +19,8 @@ public class Menu {
     Label.LabelStyle labelStyle;
     TextButton.TextButtonStyle textButtonStyle, textButtonStyleBg;
     Settings settings;
+
+    int numberOfItems = 0;
 
     float centerX, topY, spacing;
 
@@ -63,14 +68,18 @@ public class Menu {
     }
 
     private void addButton(String name) {
-        TextButton button = new TextButton(name, textButtonStyle);
+        TextButton button = new TextButton(Settings.SettingsEnum.valueOf(name).s, textButtonStyle);
         button.setHeight(stage.getHeight()*0.05f);
         button.setWidth(stage.getWidth()*0.075f);
-
+        button.setName(name);
         button.setPosition(centerX - button.getWidth()/2, (topY - button.getHeight()) - previousHeight());
 
+        addListener(button);
+
         menuEntry.add(button);
+        numberOfItems++;
     }
+
 
     private void addSlider(String name) {
 
@@ -86,12 +95,12 @@ public class Menu {
         sliderBackground.setWidth(stage.getWidth()*0.5f);
         sliderBackground.setPosition(centerX - sliderBackground.getWidth()/2, topY - sliderBackground.getHeight() - previousHeight());
 
-        TextButton leftArrow = new TextButton("<", textButtonStyle);
+        TextButton leftArrow = new TextButton("-", textButtonStyle);
         leftArrow.setHeight(stage.getHeight()*0.05f);
         leftArrow.setWidth(stage.getHeight()*0.05f);
         leftArrow.setPosition(sliderBackground.getX() - leftArrow.getWidth(), sliderBackground.getY());
 
-        TextButton rightArrow = new TextButton(">", textButtonStyle);
+        TextButton rightArrow = new TextButton("+", textButtonStyle);
         rightArrow.setHeight(stage.getHeight()*0.05f);
         rightArrow.setWidth(stage.getHeight()*0.05f);
         rightArrow.setPosition(sliderBackground.getX() + sliderBackground.getWidth(), sliderBackground.getY());
@@ -101,18 +110,20 @@ public class Menu {
         slider.setWidth(stage.getWidth()*0.025f);
         slider.setPosition(centerX - sliderBackground.getWidth()/2, sliderBackground.getY());
 
-    //    menuEntry.add(label);
+    //  menuEntry.add(label);
         menuEntry.add(leftArrow);
         menuEntry.add(sliderBackground);
         menuEntry.add(rightArrow);
         menuEntry.add(slider);
+
+        numberOfItems++;
     }
 
     private float previousHeight() {
         float previousHeight = 0;
         spacing = stage.getHeight()*0.02f;
-        for (int i = 1; i < menuEntry.size && (menuEntry.get(i).getY(i) - menuEntry.get(i-1).getY() < 0); i++) {
-            previousHeight += menuEntry.get(i).getHeight() + spacing;
+        for (int i = 0; i < numberOfItems ; i++) {
+            previousHeight += stage.getHeight()*0.05f * (i+1) + spacing;
         }
         return previousHeight;
     }
@@ -125,5 +136,17 @@ public class Menu {
             menuEntry.get(i).moveBy(0, diff);
         }
         topY = 0.95f * stage.getHeight();
+    }
+
+    private void addListener(TextButton button) {
+        final String s = button.getName();
+        button.addListener(new InputListener() {
+
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
+                settings.set(Settings.SettingsEnum.RESET.valueOf(s), x, y);
+                settings.update();
+                return true;
+            }
+        });
     }
 }

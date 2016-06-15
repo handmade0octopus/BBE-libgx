@@ -4,7 +4,7 @@ package com.handmadeoctopus.environment;
 public class Settings {
     int ballsQuantity, ballsSize, ballsTail;
     float springiness, gravity, forces;
-    boolean gravitation, ballsForces;
+    boolean gravitation, ballsForces, reset = false;
 
     public Settings() {
 
@@ -26,8 +26,25 @@ public class Settings {
         update();
     }
 
-    private void update() {
+    public void update() {
+        if(reset) { reset = false; }
+    }
 
+    public void set(SettingsEnum settingsEnum, float x, float y) {
+        switch(settingsEnum) {
+            case RESET: reset = true; break;
+        }
+    }
+
+
+    enum SettingsEnum {
+        RESET("RESET"), BALLSQUANTITY("BALLS QUANTITY");
+
+        String s;
+
+        SettingsEnum(String s) {
+            this.s = s;
+        }
     }
 
 }
