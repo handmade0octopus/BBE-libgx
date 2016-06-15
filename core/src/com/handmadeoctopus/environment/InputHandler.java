@@ -51,6 +51,8 @@ public class InputHandler implements InputProcessor {
 
         float z = uiCamera.viewportWidth/Gdx.graphics.getWidth();
         float q = uiCamera.viewportHeight/Gdx.graphics.getHeight();
+        slidingMenu.z = z;
+        slidingMenu.q = q;
 
         if (Gdx.input.isTouched(0)) {
             zoom.x = Gdx.input.getX(0);

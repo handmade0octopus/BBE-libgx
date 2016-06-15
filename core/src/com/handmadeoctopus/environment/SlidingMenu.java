@@ -24,6 +24,7 @@ public class SlidingMenu {
         Menu menu;
         int inter = 0;
         boolean visible = false, menuOn = false;
+        float z, q;
 
 
         public SlidingMenu(final Stage stage, final InputHandler handler, Settings settings) {
@@ -68,6 +69,7 @@ public class SlidingMenu {
                 stage.addAction(Actions.alpha(0.2f));
 
                 menu = new Menu(stage, skin, settings);
+
 
                 // Add a listener to the button. ChangeListener is fired when the button's checked state changes, eg when clicked,
                 // Button#setChecked() is called, via a key press, etc. If the event.cancel() is called, the checked state will be reverted.
@@ -114,6 +116,8 @@ public class SlidingMenu {
                                 menuOn = true;
                         }
                 }
+                menu.z = z;
+                menu.q = q;
         }
 
         public void update(float width, float height) {
