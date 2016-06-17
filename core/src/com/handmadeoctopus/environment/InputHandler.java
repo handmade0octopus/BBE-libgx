@@ -104,4 +104,9 @@ public class InputHandler implements InputProcessor {
         slidingMenu.update(width, height);
     }
 
+    public void updateMenu() {
+        float z = uiCamera.viewportWidth/Gdx.graphics.getWidth();
+        float q = uiCamera.viewportHeight/Gdx.graphics.getHeight();
+        slidingMenu.updateMenu(z, q);
+    }
 }

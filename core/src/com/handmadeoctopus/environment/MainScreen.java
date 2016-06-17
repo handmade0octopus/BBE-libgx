@@ -127,11 +127,13 @@ public class MainScreen implements Screen {
         camera.position.set(camera.viewportWidth / 2f, camera.viewportHeight / 2f, 0);
         camera.update();
 
-
         handler.update(width, height);
+
         uiCamera.setToOrtho(false, this.width, this.height);
         uiCamera.position.set(uiCamera.viewportWidth / 2f, uiCamera.viewportHeight / 2f, 0);
         uiCamera.update();
+
+        handler.updateMenu();
     }
 
     @Override

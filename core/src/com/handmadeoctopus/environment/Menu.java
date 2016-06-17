@@ -7,6 +7,7 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
@@ -16,37 +17,57 @@ import com.badlogic.gdx.utils.Array;
 
 public class Menu {
     Stage stage;
-    Array<Actor> menuEntry;
+    Array<TextButton> menuEntry;
+    Array<Actor> stageEntry;
     Skin skin;
     Label.LabelStyle labelStyle;
     TextButton.TextButtonStyle textButtonStyle, textButtonStyleBg;
     Settings settings;
+
 
     int numberOfItems = 0;
 
     float centerX, topY, spacing;
     float z, q;
 
-    public Menu(Stage stage, Skin skin, Settings settings) {
+    public Menu(Stage stage, Skin skin, Settings settings, TextButton menuButton) {
         this.stage = stage;
         this.skin = skin;
         this.settings = settings;
-        init();
+        init(menuButton);
     }
 
-    public void init() {
+    public void init(TextButton menuButton) {
         settings.setMenu(this);
 
         topY = 0.95f * stage.getHeight();
         centerX = 0.5f * stage.getWidth();
-        spacing = 0.02f * stage.getHeight();
 
-        menuEntry = stage.getActors();
+        stageEntry = stage.getActors();
+        menuEntry = new Array<TextButton>();
 
         setStyle();
+        stage.addActor(newBlackScreen("BLACKS"));
+
+        stage.addActor(menuButton);
 
         addButton("RESET");
         addSlider("BALLSQUANTITYBG");
+        addSlider("BALLSSIZE");
+        addSlider("BALLSTAIL");
+        addSlider("SPRINGINESS");
+        addSlider("GRAVITY");
+        addSlider("FORCES");
+        addButton("RELOAD");
+
+
+
+        for (TextButton button : menuEntry) {
+            stageEntry.add(button);
+        }
+
+
+        fadeOut(0f);
     }
 
     private void setStyle() {
@@ -85,7 +106,7 @@ public class Menu {
         newButton.addListener(new InputListener() {
 
             public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
-                settings.set(Settings.SettingsEnum.valueOf(newButton.getName()), x, y, newButton);
+                settings.set(x, newButton, null, false);
                 settings.update();
                 return true;
             }
@@ -96,7 +117,6 @@ public class Menu {
         numberOfItems++;
     }
 
-
     private void addSlider(String name) {
 
 
@@ -106,20 +126,12 @@ public class Menu {
         label.setWidth(stage.getWidth()*0.075f);
         label.setPosition(centerX - label.getWidth()/2, (topY - label.getHeight()) - previousHeight - stage.getHeight()*0.01f); */
 
-        final TextButton sliderBackground = new TextButton(Settings.SettingsEnum.valueOf(name).s + ": " + previousHeight(), textButtonStyleBg);
+        final TextButton sliderBackground = new TextButton(Settings.SettingsEnum.valueOf(name).s + ": " + settings.ballsQuantity, textButtonStyleBg);
+        sliderBackground.setName(name);
         sliderBackground.setHeight(stage.getHeight()*0.05f);
         sliderBackground.setWidth(stage.getWidth()*0.5f);
         sliderBackground.setPosition(centerX - sliderBackground.getWidth()/2, topY - sliderBackground.getHeight() - previousHeight());
 
-        TextButton leftArrow = new TextButton("-", textButtonStyle);
-        leftArrow.setHeight(stage.getHeight()*0.05f);
-        leftArrow.setWidth(stage.getHeight()*0.05f);
-        leftArrow.setPosition(sliderBackground.getX() - leftArrow.getWidth(), sliderBackground.getY());
-
-        TextButton rightArrow = new TextButton("+", textButtonStyle);
-        rightArrow.setHeight(stage.getHeight()*0.05f);
-        rightArrow.setWidth(stage.getHeight()*0.05f);
-        rightArrow.setPosition(sliderBackground.getX() + sliderBackground.getWidth(), sliderBackground.getY());
 
         final TextButton slider = new TextButton(" ", textButtonStyle);
         slider.setName(name);
@@ -127,12 +139,47 @@ public class Menu {
         slider.setWidth(stage.getWidth()*0.025f);
         slider.setPosition(centerX - sliderBackground.getWidth()/2, sliderBackground.getY());
         slider.addListener(new DragListener() {
-
             public void touchDragged (InputEvent event, float x, float y, int pointer) {
-                settings.drag(Settings.SettingsEnum.valueOf(slider.getName()), z*Gdx.input.getX(), y, slider, sliderBackground);
-                settings.update();
+                settings.drag(z*Gdx.input.getX(), slider, sliderBackground);
             }
         });
+
+        sliderBackground.addListener(new InputListener() {
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
+                settings.set(z*Gdx.input.getX() > slider.getX() ? +10 : -10 , slider, sliderBackground, true);
+                return true;
+            }
+        });
+
+
+
+        final TextButton leftArrow = new TextButton("-", textButtonStyle);
+        leftArrow.setName(name);
+        leftArrow.setHeight(stage.getHeight()*0.05f);
+        leftArrow.setWidth(stage.getHeight()*0.05f);
+        leftArrow.setPosition(sliderBackground.getX() - leftArrow.getWidth(), sliderBackground.getY());
+        leftArrow.addListener(new InputListener() {
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
+                settings.set(-1f, slider, sliderBackground, true);
+                return true;
+            }
+        });
+
+        final TextButton rightArrow = new TextButton("+", textButtonStyle);
+        rightArrow.setName(name);
+        rightArrow.setHeight(stage.getHeight()*0.05f);
+        rightArrow.setWidth(stage.getHeight()*0.05f);
+        rightArrow.setPosition(sliderBackground.getX() + sliderBackground.getWidth(), sliderBackground.getY());
+        rightArrow.addListener(new InputListener() {
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
+                settings.set(1f, slider, sliderBackground, true);
+                return true;
+            }
+        });
+
+        leftArrow.getLabel().setFontScale(2);
+        rightArrow.getLabel().setFontScale(2);
+
 
     //  menuEntry.add(label);
         menuEntry.add(leftArrow);
@@ -143,11 +190,72 @@ public class Menu {
         numberOfItems++;
     }
 
+    TextButton newBlackScreen(String name) {
+
+        TextButton.TextButtonStyle blackScreenStyle = new TextButton.TextButtonStyle();
+        blackScreenStyle.up = skin.newDrawable("white", Color.BLACK);
+        blackScreenStyle.font = skin.getFont("default");
+
+        skin.add("default", blackScreenStyle);
+
+        final TextButton newButton = new TextButton(Settings.SettingsEnum.valueOf(name).s, blackScreenStyle);
+        newButton.setHeight(stage.getHeight());
+        newButton.setWidth(stage.getWidth());
+        newButton.setName(name);
+        newButton.setPosition(0, 0);
+
+        newButton.addListener(new DragListener() {
+            public void touchDragged (InputEvent event, float x, float y, int pointer) {
+                setPointY(y, true);
+                transformY(y);
+            }
+
+            @Override
+            public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
+                super.touchUp(event, x, y, pointer, button);
+                setPointY(y, false);
+            }
+        });
+
+        return newButton;
+    }
+
+    boolean scrolling = false;
+    float startY, movedBy = 0;
+
+    private void setPointY(float y, boolean scroll) {
+        if (!scrolling) {
+            startY = y;
+        }
+        scrolling = scroll;
+    }
+
+    private void transformY(float y) {
+        if (scrolling) {
+            float newY;
+            if (movedBy >= 500) {
+                newY = -10;
+                movedBy = 500;
+            } else if (movedBy <= -500) {
+                newY = 10;
+                movedBy = -500;
+            } else {
+                newY = (y - startY)/2;
+            }
+
+            for (int i = 2; i < stageEntry.size; i++) {
+                stageEntry.get(i).addAction(Actions.moveBy(0, newY, 0.2f));
+            }
+            startY = y;
+            movedBy += newY;
+        }
+    }
+
     private float previousHeight() {
         float previousHeight = 0;
-        spacing = stage.getHeight()*0.02f;
+        spacing = stage.getHeight()*0.075f;
         for (int i = 0; i < numberOfItems ; i++) {
-            previousHeight += stage.getHeight()*0.05f * (i+1) + spacing;
+            previousHeight += spacing;
         }
         return previousHeight;
     }
@@ -156,31 +264,48 @@ public class Menu {
 
     public void update(float difference) {
         float diff = 0.95f * stage.getHeight() - topY;
-        for (int i = 1; i < menuEntry.size; i++) {
-            menuEntry.get(i).moveBy(0, diff);
+        for (int i = 2; i < stageEntry.size; i++) {
+            stageEntry.get(i).moveBy(0, diff);
         }
         topY = 0.95f * stage.getHeight();
     }
 
-    private void addListener(final TextButton handledButton) {
-        final String name = handledButton.getName();
-        handledButton.addListener(new InputListener() {
-
-            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
-                settings.set(Settings.SettingsEnum.valueOf(name), x, y, handledButton);
-                settings.update();
-                return true;
-            }
-        });
-    }
 
     public void updateValues() {
-
+        for (int i = 2; i < menuEntry.size; i++) {
+            if (menuEntry.get(i).getText().toString().equals(" ")) {
+                for (int d = 2; d < menuEntry.size; d++) {
+                    if (menuEntry.get(i).getName().equals(menuEntry.get(d).getName())
+                            && !menuEntry.get(d).getText().toString().equals(" ")
+                            && !menuEntry.get(d).getText().toString().equals("+")
+                            && !menuEntry.get(d).getText().toString().equals("-"))  {
+                        settings.set(settings.getVar(menuEntry.get(i)), menuEntry.get(i), menuEntry.get(d));
+                    }
+                }
+            }
+        }
     }
 
     public void resetValues() {
-
+        updateValues();
     }
 
+    public void fadeOut(float time) {
+        for (int i = 2; i < stageEntry.size; i++) {
+            stageEntry.get(i).addAction(Actions.fadeOut(time));
+        }
+        stageEntry.get(0).addAction(Actions.fadeOut(time));
+        stageEntry.get(1).addAction(Actions.alpha(0.5f, time));
+    }
+
+    public void fadeIn(float time) {
+        for (int i = 0; i < stageEntry.size; i++) {
+            stageEntry.get(i).addAction(Actions.fadeIn(time));
+            if (i > 1) if (menuEntry.get(i-2).getText().toString().equals(" ")) {
+                stageEntry.get(i).addAction(Actions.alpha(0.5f, time));
+            }
+        }
+        stageEntry.get(0).addAction(Actions.alpha(0.8f, time));
+    }
 
 }

@@ -40,7 +40,7 @@ public class SlidingMenu {
                 skin = new Skin();
                 // Generate a 1x1 white texture and store it in the skin named "white".
                 Pixmap pixmap = new Pixmap(100, 100, Pixmap.Format.RGBA8888);
-                pixmap.setColor(Color.GREEN);
+                pixmap.setColor(Color.WHITE);
                 pixmap.fill();
 
                 skin.add("white", new Texture(pixmap));
@@ -65,10 +65,11 @@ public class SlidingMenu {
                 textButton.setWidth(100);
                 textButton.setHeight(50);
                 textButton.setPosition(stage.getWidth()-textButton.getWidth(), stage.getHeight()-textButton.getHeight());
-                stage.addActor(textButton);
-                stage.addAction(Actions.alpha(0.2f));
 
-                menu = new Menu(stage, skin, settings);
+
+
+                menu = new Menu(stage, skin, settings, textButton);
+
 
 
                 // Add a listener to the button. ChangeListener is fired when the button's checked state changes, eg when clicked,
@@ -82,7 +83,7 @@ public class SlidingMenu {
                                 menuOn = false;
                                 visible = false;
                                 inter = 0;
-                                stage.addAction(new SequenceAction(Actions.fadeOut(0.5f), Actions.alpha(0.2f)));
+                                menu.fadeOut(0.5f);
                                 textButton.setChecked(false);
                                 return true;
                         }
@@ -94,7 +95,7 @@ public class SlidingMenu {
                 stage.draw();
                 if (visible && !menuOn) { inter++; }
                 if (inter >= 100) {
-                        stage.addAction(new SequenceAction(Actions.fadeOut(0.5f), Actions.alpha(0.2f)));
+                        menu.fadeOut(0.5f);
                         visible = false;
                         inter = 0;
                 }
@@ -108,7 +109,7 @@ public class SlidingMenu {
                 if(x > textButton.getX() && x < textButton.getX() + textButton.getWidth() && y > textButton.getY()
                         && y < textButton.getY() + textButton.getHeight()) {
                         if (inter == 0) {
-                                stage.addAction(Actions.fadeIn(0.5f));
+                                menu.fadeIn(0.5f);
                                 visible = true;
                         }
                         if (inter > 0) {
@@ -126,10 +127,16 @@ public class SlidingMenu {
                 float f = (h / w);
                 float difference =  height - stage.getViewport().getWorldHeight();
                 float diff = stage.getViewport().getWorldWidth() - width;
+
                 stage.getViewport().update((int) width, (int) height, true);
                 stage.getViewport().setWorldWidth(1000);
                 stage.getViewport().setWorldHeight(1000*f);
                 textButton.setPosition(stage.getViewport().getWorldWidth()-textButton.getWidth(), stage.getViewport().getWorldHeight()-textButton.getHeight());
                 menu.update(difference + diff);
+        }
+
+        public void updateMenu(float z, float q) {
+                menu.z = z;
+                menu.q = q;
         }
 }
