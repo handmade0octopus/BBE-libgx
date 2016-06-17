@@ -23,6 +23,7 @@ public class Menu {
     Label.LabelStyle labelStyle;
     TextButton.TextButtonStyle textButtonStyle, textButtonStyleBg;
     Settings settings;
+    SlidingMenu slidingMenu;
 
 
     int numberOfItems = 0;
@@ -30,10 +31,11 @@ public class Menu {
     float centerX, topY, spacing;
     float z, q;
 
-    public Menu(Stage stage, Skin skin, Settings settings, TextButton menuButton) {
+    public Menu(Stage stage, Skin skin, Settings settings, TextButton menuButton, SlidingMenu slidingMenu) {
         this.stage = stage;
         this.skin = skin;
         this.settings = settings;
+        this.slidingMenu = slidingMenu;
         init(menuButton);
     }
 
@@ -207,13 +209,14 @@ public class Menu {
         newButton.addListener(new DragListener() {
             public void touchDragged (InputEvent event, float x, float y, int pointer) {
                 setPointY(y, true);
-                transformY(y);
+                transformY(y, false);
             }
 
             @Override
             public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
                 super.touchUp(event, x, y, pointer, button);
                 setPointY(y, false);
+                transformY(y, false);
             }
         });
 
@@ -230,21 +233,20 @@ public class Menu {
         scrolling = scroll;
     }
 
-    private void transformY(float y) {
+    private void transformY(float y, boolean end) {
         if (scrolling) {
-            float newY;
-            if (movedBy >= 500) {
-                newY = -10;
-                movedBy = 500;
-            } else if (movedBy <= -500) {
-                newY = 10;
-                movedBy = -500;
-            } else {
-                newY = (y - startY)/2;
+            float newY = (y - startY)/2;
+            if (movedBy >= 500 && newY > 0) {
+                newY = 0;
+            } else if (movedBy <= -500 && newY < 0) {
+                newY = 0;
+            } else if (end && movedBy < 10 && movedBy > - 10) {
+                newY = -movedBy;
+                movedBy = 0;
             }
 
             for (int i = 2; i < stageEntry.size; i++) {
-                stageEntry.get(i).addAction(Actions.moveBy(0, newY, 0.2f));
+                stageEntry.get(i).addAction(Actions.moveBy(0, newY, 0));
             }
             startY = y;
             movedBy += newY;
@@ -260,8 +262,6 @@ public class Menu {
         return previousHeight;
     }
 
-
-
     public void update(float difference) {
         float diff = 0.95f * stage.getHeight() - topY;
         for (int i = 2; i < stageEntry.size; i++) {
@@ -269,7 +269,6 @@ public class Menu {
         }
         topY = 0.95f * stage.getHeight();
     }
-
 
     public void updateValues() {
         for (int i = 2; i < menuEntry.size; i++) {
@@ -308,4 +307,7 @@ public class Menu {
         stageEntry.get(0).addAction(Actions.alpha(0.8f, time));
     }
 
+    public void setMenu(boolean on) {
+        slidingMenu.setMenu(on);
+    }
 }

@@ -20,7 +20,7 @@ public class InputHandler implements InputProcessor {
 
     public InputHandler(OrthographicCamera camera, OrthographicCamera uiCamera, Zoom zoom, Stage stage, Settings settings) {
         this.camera = camera;
-        this.uiCamera = camera;
+        this.uiCamera = uiCamera;
         this.zoom = zoom;
         this.slidingMenu = new SlidingMenu(stage, this, settings);
         this.settings = settings;

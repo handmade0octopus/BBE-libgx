@@ -6,13 +6,10 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
-import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
-import com.badlogic.gdx.scenes.scene2d.actions.*;
 
 public class SlidingMenu {
         Stage stage;
@@ -68,7 +65,7 @@ public class SlidingMenu {
 
 
 
-                menu = new Menu(stage, skin, settings, textButton);
+                menu = new Menu(stage, skin, settings, textButton, this);
 
 
 
@@ -79,12 +76,7 @@ public class SlidingMenu {
                 textButton.addListener(new InputListener() {
 
                         public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
-                                Gdx.input.setInputProcessor(handler);
-                                menuOn = false;
-                                visible = false;
-                                inter = 0;
-                                menu.fadeOut(0.5f);
-                                textButton.setChecked(false);
+                                setMenu(false);
                                 return true;
                         }
                 });
@@ -101,8 +93,19 @@ public class SlidingMenu {
                 }
         }
 
-        public void setInputProcessor() {
-                Gdx.input.setInputProcessor(stage);
+        public void setMenu(boolean on) {
+                if (on) {
+                        Gdx.input.setInputProcessor(stage);
+                        menuOn = true;
+                        inter = 0;
+                } else {
+                        Gdx.input.setInputProcessor(handler);
+                        menuOn = false;
+                        visible = false;
+                        inter = 0;
+                        menu.fadeOut(0.5f);
+                        textButton.setChecked(false);
+                }
         }
 
         public void onClick(float x, float y) {
@@ -113,8 +116,7 @@ public class SlidingMenu {
                                 visible = true;
                         }
                         if (inter > 0) {
-                                setInputProcessor();
-                                menuOn = true;
+                                setMenu(true);
                         }
                 }
                 menu.z = z;

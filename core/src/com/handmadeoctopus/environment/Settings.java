@@ -81,9 +81,8 @@ public class Settings {
 
         if (relative) {
             newQuant = var + newValue;
-            if (var+newValue >= min && var+newValue <= max) {
-                diff = button.getX() + newValue*(bgButton.getWidth()-button.getWidth())/(max-min);
-            } else { diff = button.getX(); }
+            diff = button.getX() + newValue*(bgButton.getWidth()-button.getWidth())/(max-min);
+
         } else if (exact) {
             newQuant = var;
             diff =  bgButton.getX() + ((bgButton.getWidth() - button.getWidth()) * (newValue-min)) / (max-min) ;
@@ -91,6 +90,11 @@ public class Settings {
             newQuant = (max-min) * (newValue) / (bgButton.getWidth() - button.getWidth()) + min;
         }
 
+        if (diff < bgButton.getX()) {
+            diff = bgButton.getX();
+        } else if (diff > bgButton.getX() + bgButton.getWidth() - button.getWidth()) {
+            diff = bgButton.getX() + bgButton.getWidth() - button.getWidth();
+        }
 
         if (newQuant < min) {
             newQuant = min;
@@ -117,8 +121,51 @@ public class Settings {
         }
     }
 
+    float var(SettingsEnum settingsEnum, boolean set, float value) {
+        switch(settingsEnum) {
+            case BALLSQUANTITYBG:
+                if(set) {
+                    ballsQuantity = (int) value;
+                    return 0;
+                } else { return ballsQuantity; }
+            case BALLSSIZE:
+                if(set) {
+                    ballsSize = (int) value;
+                    return 0;
+                } else { return ballsSize; }
+            case BALLSTAIL:
+                if(set) {
+                    ballsTail = (int) value;
+                    return 0;
+                } else { return ballsTail; }
+            case SPRINGINESS:
+                if(set) {
+                    springiness = (int) value;
+                    return 0;
+                } else {  return springiness; }
+            case GRAVITY:
+                if(set) {
+                    gravity = (int) value;
+                    return 0;
+                } else { return gravity; }
+            case FORCES:
+                if(set) {
+                    forces = (int) value;
+                    return 0;
+                } else { return forces; }
+            default: return 0;
+        }
+    }
+
+    private void setVar(TextButton button, float value){
+        var(SettingsEnum.valueOf(button.getName()), true, value);
+        update();
+    }
+
     float getVar(TextButton button) {
-        switch(SettingsEnum.valueOf(button.getName())) {
+        return var(SettingsEnum.valueOf(button.getName()), false, 0);
+
+      /*  switch(SettingsEnum.valueOf(button.getName())) {
             case BALLSQUANTITYBG: return ballsQuantity;
             case BALLSSIZE: return ballsSize;
             case BALLSTAIL: return ballsTail;
@@ -126,7 +173,11 @@ public class Settings {
             case GRAVITY: return gravity;
             case FORCES: return forces;
             default: return 0;
-        }
+        } */
+    }
+
+    void setMenu(boolean on) {
+        menu.setMenu(on);
     }
 
     enum SettingsEnum {
