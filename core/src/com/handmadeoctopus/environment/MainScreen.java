@@ -138,12 +138,12 @@ public class MainScreen implements Screen {
 
     @Override
     public void pause() {
-
+        settings.save();
     }
 
     @Override
     public void resume() {
-
+        settings.load();
     }
 
     @Override
@@ -153,6 +153,6 @@ public class MainScreen implements Screen {
 
     @Override
     public void dispose() {
-
+        settings.save();
     }
 }

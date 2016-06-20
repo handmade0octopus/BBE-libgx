@@ -1,18 +1,23 @@
 package com.handmadeoctopus.environment;
 
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 
 public class Settings {
     int ballsQuantity, ballsSize, ballsTail, springiness, gravity, forces;
     boolean gravitation, ballsForces, reset = false;
     Menu menu;
+
+    Preferences prefs;
     
     static float MAX_QUANT = 500, MAX_SIZE = 250, MAX_TAIL = 100, MAX_SPRINGINESS = 200, MAX_GRAVITY = 200, MAX_FORCES = 200;
 
 
     public Settings() {
-
+        prefs = Gdx.app.getPreferences(SettingsEnum.PREFS.s);
+        load();
     }
 
     public void set(int ballsQuantity, int ballsSize, int ballsTail, int springiness, int gravity, int forces) {
@@ -22,8 +27,38 @@ public class Settings {
         this.springiness = springiness;
         this.gravity = gravity;
         this.forces = forces;
-
+        save();
         update();
+    }
+
+    void load() {
+        ballsQuantity = prefs.getInteger(SettingsEnum.BALLSQUANTITY.s);
+        ballsSize = prefs.getInteger(SettingsEnum.BALLSSIZE.s);
+        ballsTail = prefs.getInteger(SettingsEnum.BALLSTAIL.s);
+        springiness = prefs.getInteger(SettingsEnum.SPRINGINESS.s);
+        gravity = prefs.getInteger(SettingsEnum.GRAVITY.s);
+        forces = prefs.getInteger(SettingsEnum.FORCES.s);
+        update();
+    }
+
+    void save() {
+        prefs.putInteger(SettingsEnum.BALLSQUANTITY.s, ballsQuantity);
+        prefs.putInteger(SettingsEnum.BALLSSIZE.s, ballsSize);
+        prefs.putInteger(SettingsEnum.BALLSTAIL.s, ballsTail);
+        prefs.putInteger(SettingsEnum.SPRINGINESS.s, springiness);
+        prefs.putInteger(SettingsEnum.GRAVITY.s, gravity);
+        prefs.putInteger(SettingsEnum.FORCES.s, forces);
+        prefs.flush();
+    }
+
+    public void resetDefaults() {
+        ballsQuantity = 100;
+        ballsSize = 50;
+        ballsTail = 10;
+        springiness = 100;
+        gravity = 0;
+        forces = 100;
+        save();
     }
 
     public void setMenu(Menu menu) {
@@ -36,13 +71,13 @@ public class Settings {
         if (gravity > 0) { gravitation = true; }
         else { gravitation = false; }
 
-        menu.updateValues();
+        if (menu != null) { menu.updateValues(); }
     }
 
     public void set(float x, TextButton button, TextButton bgButton, boolean relative, boolean exact) {
         switch(SettingsEnum.valueOf(button.getName())) {
             case RESET: menu.resetValues(); break;
-            case BALLSQUANTITYBG:
+            case BALLSQUANTITY:
                 ballsQuantity = setBallsParam(x, button, bgButton, relative, exact, ballsQuantity, 0, MAX_QUANT);
                 break;
             case BALLSSIZE:
@@ -121,9 +156,9 @@ public class Settings {
         }
     }
 
-    float var(SettingsEnum settingsEnum, boolean set, float value) {
+    private float var(SettingsEnum settingsEnum, boolean set, float value) {
         switch(settingsEnum) {
-            case BALLSQUANTITYBG:
+            case BALLSQUANTITY:
                 if(set) {
                     ballsQuantity = (int) value;
                     return 0;
@@ -166,7 +201,7 @@ public class Settings {
         return var(SettingsEnum.valueOf(button.getName()), false, 0);
 
       /*  switch(SettingsEnum.valueOf(button.getName())) {
-            case BALLSQUANTITYBG: return ballsQuantity;
+            case BALLSQUANTITY: return ballsQuantity;
             case BALLSSIZE: return ballsSize;
             case BALLSTAIL: return ballsTail;
             case SPRINGINESS: return springiness;
@@ -182,14 +217,15 @@ public class Settings {
 
     enum SettingsEnum {
         RESET("RESET"),
-        BALLSQUANTITYBG("BALLS' QUANTITY"),
+        BALLSQUANTITY("BALLS' QUANTITY"),
         BALLSSIZE("BALLS' SIZE"),
         BALLSTAIL("BALLS' TAIL"),
         SPRINGINESS("SPRINGINESS"),
         GRAVITY("GRAVITY"),
         FORCES("FORCES"),
         RELOAD("RELOAD"),
-        BLACKS("  ");
+        BLACKS("  "),
+        PREFS("GAMEPREFS");
 
         String s;
 

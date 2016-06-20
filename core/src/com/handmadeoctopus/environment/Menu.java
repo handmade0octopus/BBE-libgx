@@ -54,7 +54,7 @@ public class Menu {
         stage.addActor(menuButton);
 
         addButton("RESET");
-        addSlider("BALLSQUANTITYBG");
+        addSlider("BALLSQUANTITY");
         addSlider("BALLSSIZE");
         addSlider("BALLSTAIL");
         addSlider("SPRINGINESS");
@@ -70,6 +70,7 @@ public class Menu {
 
 
         fadeOut(0f);
+        updateValues();
     }
 
     private void setStyle() {
@@ -286,7 +287,7 @@ public class Menu {
     }
 
     public void resetValues() {
-        updateValues();
+        settings.resetDefaults();
     }
 
     public void fadeOut(float time) {
