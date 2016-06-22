@@ -9,6 +9,7 @@ public class Settings {
     int ballsQuantity, ballsSize, ballsTail, springiness, gravity, forces;
     boolean gravitation, ballsForces, reset = false;
     Menu menu;
+    Zoom zoom;
 
     Preferences prefs;
     
@@ -213,6 +214,14 @@ public class Settings {
 
     void setMenu(boolean on) {
         menu.setMenu(on);
+    }
+
+    public void setZoom(Zoom zoom) {
+        this.zoom = zoom;
+    }
+
+    public void resetZoom() {
+        zoom.reset();
     }
 
     enum SettingsEnum {

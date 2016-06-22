@@ -2,11 +2,15 @@ package com.handmadeoctopus.environment;
 
 
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.handmadeoctopus.entities.Box;
 
 public class Zoom {
 
     OrthographicCamera camera;
     boolean zooming = false;
+    Box box;
+
+    static final float MIN_ZOOM = 1f, MAX_ZOOM = 0.01f;
 
     public float x, y, x1, y1, xP, yP, baseX = 0, baseY = 0, baseRotation = 0, z;
 
@@ -37,6 +41,9 @@ public class Zoom {
         camera.translate((xP - xPnew)*camera.zoom, (yPnew - yP)*camera.zoom);
         camera.update();
 
+        checkCamera();
+
+        box.moveZoom((xP - xPnew)*camera.zoom, (yP - yPnew)*camera.zoom, camera.zoom, xP, yP);
 
 	/*
 	    if (x > x1) {
@@ -55,6 +62,7 @@ public class Zoom {
 		camera.rotate((float) angle*60);
 		baseRotation += angle*60; */
 
+
         baseX += (xP - xPnew)*camera.zoom;
         baseY += (yP - yPnew)*camera.zoom;
 
@@ -64,6 +72,8 @@ public class Zoom {
         this.y = y;
         this.x1 = x1;
         this.y1 = y1;
+
+
     }
 
     public void touchUpAction (int pointer) {
@@ -71,22 +81,39 @@ public class Zoom {
             zooming = false;
             if (camera.zoom < 1.1 && camera.zoom > 0.9 && baseX > -100 && baseX < 100 && baseY > -100
                     && baseY < 100 && camera.zoom > 0.5f) {
-                camera.zoom = 1;
-                camera.position.set(camera.viewportWidth / 2f, camera.viewportHeight / 2f, 0);
-                baseX = 0;
-                baseY = 0;
+                reset();
             }
 	/*	    	if (zoom.baseRotation > -5 && zoom.baseRotation < 5) {
 		    		camera.rotate(-baseRotation);
 		    		zoom.baseRotation = 0;
 		    	}*/
+
+            checkCamera();
             camera.update();
         }
+    }
+
+    void checkCamera() {
+        if (camera.zoom > MIN_ZOOM) { camera.zoom = MIN_ZOOM; }
+        else if (camera.zoom < MAX_ZOOM) { camera.zoom = MAX_ZOOM; }
+
+
     }
 
 
     public void dragged(float x, float y, float x1, float y1) {
         setPoint(x, y, x1, y1);
         setZoom(x, y, x1, y1);
+    }
+
+    public void reset() {
+        camera.zoom = 1;
+        camera.position.set(camera.viewportWidth / 2f, camera.viewportHeight / 2f, 0);
+        baseX = 0;
+        baseY = 0;
+    }
+
+    public void setBox(Box box) {
+        this.box = box;
     }
 }

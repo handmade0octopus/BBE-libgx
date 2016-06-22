@@ -92,6 +92,7 @@ public class InputHandler implements InputProcessor {
     @Override
     public boolean scrolled(int amount) {
         camera.zoom *= (10f+amount)/10f;
+        zoom.checkCamera();
         camera.update();
         return false;
     }

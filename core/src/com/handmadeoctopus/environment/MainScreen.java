@@ -14,6 +14,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Image;
 
 import com.badlogic.gdx.utils.viewport.*;
 import com.handmadeoctopus.BouncingBallEngine;
+import com.handmadeoctopus.entities.*;
 
 
 public class MainScreen implements Screen {
@@ -26,6 +27,7 @@ public class MainScreen implements Screen {
     ShapeRenderer renderer;
     Zoom zoom;
     Settings settings;
+    Box box;
 
     private InputHandler handler;
 
@@ -47,6 +49,8 @@ public class MainScreen implements Screen {
         uiCamera.update();
 
         zoom = new Zoom(camera);
+        box = new Box(width, height);
+        zoom.setBox(box);
 
         batch = new SpriteBatch();
         batchUi = new SpriteBatch();
@@ -60,6 +64,7 @@ public class MainScreen implements Screen {
         stage = new Stage(new ExtendViewport(width, height, uiCamera));
 
         settings = new Settings();
+        settings.setZoom(zoom);
 
         handler = new InputHandler(camera, uiCamera, zoom, stage, settings);
 
@@ -86,26 +91,19 @@ public class MainScreen implements Screen {
         batchUi.setProjectionMatrix(uiCamera.combined);
 
 
-
-        renderer.begin(ShapeRenderer.ShapeType.Filled);
-        renderer.setColor(Color.BLACK);
-        renderer.rect(0, 0, width, height);
-        renderer.end();
-
-
-
-
+        draw();
 
         renderer.begin(ShapeRenderer.ShapeType.Filled);
         renderer.setColor(Color.CYAN);
-        renderer.circle(camera.viewportWidth / 2f, camera.viewportHeight / 2f, 100, 360);
+        renderer.circle(camera.viewportWidth / 2f, camera.viewportHeight / 2f, 1, 180);
         renderer.end();
 
-        draw();
+
     }
 
     private void draw() {
         renderer.begin(ShapeRenderer.ShapeType.Filled);
+        box.draw(renderer);
         renderer.end();
 
         batch.begin();
@@ -122,6 +120,9 @@ public class MainScreen implements Screen {
         float h = height;
         float f = (h / w);
         this.height = this.width * f;
+
+        box.set(0, 0, this.width, this.height);
+
 
         camera.setToOrtho(false, this.width, this.height);
         camera.position.set(camera.viewportWidth / 2f, camera.viewportHeight / 2f, 0);
