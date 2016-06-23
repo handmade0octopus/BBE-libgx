@@ -19,55 +19,60 @@ import com.handmadeoctopus.entities.*;
 
 public class MainScreen implements Screen {
 
-    SpriteBatch batch, batchUi;
-    Game game;
-    Image img;
-    OrthographicCamera camera, uiCamera;
-    Stage stage;
-    ShapeRenderer renderer;
-    Zoom zoom;
-    Settings settings;
-    Box box;
+    Game game; // game object which is transferred in constructor from main class.
 
-    private InputHandler handler;
+    SpriteBatch batch, batchUi; // batches for sprites and other drawings, batchUi is used to draw UI.
+    OrthographicCamera camera, uiCamera; // similar to batches, cameras for both environments.
+    ShapeRenderer renderer; // Renderer for our non-sprite objects.
 
-    public float width, height;
+    Settings settings; // Main setting of the game.
+
+    Stage stage; // Main stage, for our UI.
+
+    Box box; // Rectangle where our objects will collide.
+
+    Zoom zoom; // Zoom class which helps us handle UI.
+
+    private InputHandler handler; // Our input handler, handles all actions.
+
+    public float width, height; // width and height of the in game screen.
 
 
     public MainScreen(Game game) {
         this.game = game;
 
+        // We calculate here height from height/width ratio.
         width = BouncingBallEngine.WIDTH;
         float w = Gdx.graphics.getWidth();
         float h = Gdx.graphics.getHeight();
         height = (int) width * ( h/w );
 
+        // We set up cameras.
         camera = new OrthographicCamera(width, height);
         camera.update();
 
         uiCamera = new OrthographicCamera(width, height);
         uiCamera.update();
 
+        // Setting zoom and box.
         zoom = new Zoom(camera);
         box = new Box(width, height);
         zoom.setBox(box);
 
+        // Setting up batches and renderer
         batch = new SpriteBatch();
         batchUi = new SpriteBatch();
-
-        img = new Image(new Texture("badlogic.jpg"));
-        img.setSize(width, width*(img.getHeight()/img.getWidth()));
-        img.setPosition(width/2 - img.getWidth()/2, height /2 - img.getHeight()/2);
-
         renderer = new ShapeRenderer();
 
+        // Setting up stage which is extended to uiCamera.
         stage = new Stage(new ExtendViewport(width, height, uiCamera));
 
+        // Settings, where all game characteristics are kept.
         settings = new Settings();
         settings.setZoom(zoom);
 
+        // Setting up handler. And making it main handler of the game.
         handler = new InputHandler(camera, uiCamera, zoom, stage, settings);
-
         Gdx.input.setInputProcessor(handler);
     }
 
@@ -81,14 +86,15 @@ public class MainScreen implements Screen {
 
     @Override
     public void render(float delta) {
+        // Main rendering class. First screen is cleared, then cameras are updated and combined with batches and renderer.
         Gdx.gl.glClearColor(1, 1, 1, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         camera.update();
         uiCamera.update();
 
         batch.setProjectionMatrix(camera.combined);
-        renderer.setProjectionMatrix(batch.getProjectionMatrix());
         batchUi.setProjectionMatrix(uiCamera.combined);
+        renderer.setProjectionMatrix(batch.getProjectionMatrix());
 
 
         draw();
@@ -102,6 +108,7 @@ public class MainScreen implements Screen {
     }
 
     private void draw() {
+        // Method for drawing all entities and UI.
         renderer.begin(ShapeRenderer.ShapeType.Filled);
         box.draw(renderer);
         renderer.end();
@@ -116,10 +123,13 @@ public class MainScreen implements Screen {
 
     @Override
     public void resize(int width, int height) {
+        // Called when window is resized or screen changes size.
         float w = width;
         float h = height;
         float f = (h / w);
-        this.height = this.width * f;
+        this.height = this.width * f; // Height calculated from screen size height/width ratio.
+
+        // Box, cameras and handler updated.
 
         box.set(0, 0, this.width, this.height);
 
@@ -139,11 +149,13 @@ public class MainScreen implements Screen {
 
     @Override
     public void pause() {
+        // Called when app pauses
         settings.save();
     }
 
     @Override
     public void resume() {
+        // Called when app resumes.
         settings.load();
     }
 

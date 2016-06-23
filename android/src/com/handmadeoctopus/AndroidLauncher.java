@@ -6,6 +6,10 @@ import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
 import com.handmadeoctopus.BouncingBallEngine;
 
+/*
+This class starts main engine for Android devices.
+ */
+
 public class AndroidLauncher extends AndroidApplication {
 	@Override
 	protected void onCreate (Bundle savedInstanceState) {

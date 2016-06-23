@@ -10,6 +10,7 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.handmadeoctopus.BouncingBallEngine;
 
 public class SlidingMenu {
         Stage stage;
@@ -68,11 +69,6 @@ public class SlidingMenu {
                 menu = new Menu(stage, skin, settings, textButton, this);
 
 
-
-                // Add a listener to the button. ChangeListener is fired when the button's checked state changes, eg when clicked,
-                // Button#setChecked() is called, via a key press, etc. If the event.cancel() is called, the checked state will be reverted.
-                // ClickListener could have been used, but would only fire when clicked. Also, canceling a ClickListener event won't
-                // revert the checked state.
                 textButton.addListener(new InputListener() {
 
                         public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
@@ -127,14 +123,12 @@ public class SlidingMenu {
                 float w = width;
                 float h = height;
                 float f = (h / w);
-                float difference =  height - stage.getViewport().getWorldHeight();
-                float diff = stage.getViewport().getWorldWidth() - width;
 
                 stage.getViewport().update((int) width, (int) height, true);
-                stage.getViewport().setWorldWidth(1000);
-                stage.getViewport().setWorldHeight(1000*f);
+                stage.getViewport().setWorldWidth(BouncingBallEngine.WIDTH);
+                stage.getViewport().setWorldHeight(BouncingBallEngine.WIDTH*f);
                 textButton.setPosition(stage.getViewport().getWorldWidth()-textButton.getWidth(), stage.getViewport().getWorldHeight()-textButton.getHeight());
-                menu.update(difference + diff);
+                menu.update();
         }
 
         public void updateMenu(float z, float q) {

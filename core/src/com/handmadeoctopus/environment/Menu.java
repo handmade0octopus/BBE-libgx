@@ -263,7 +263,7 @@ public class Menu {
         return previousHeight;
     }
 
-    public void update(float difference) {
+    public void update() {
         float diff = 0.95f * stage.getHeight() - topY;
         for (int i = 2; i < stageEntry.size; i++) {
             stageEntry.get(i).moveBy(0, diff);
