@@ -2,11 +2,13 @@ package com.handmadeoctopus.environment;
 
 
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.BoundingBox;
 import com.handmadeoctopus.entities.Box;
 
 public class Zoom {
 
-    OrthographicCamera camera;
+    OrthographicCamera camera, uiCamera;
     boolean zooming = false;
     Box box;
 
@@ -14,8 +16,63 @@ public class Zoom {
 
     public float x, y, x1, y1, xP, yP, baseX = 0, baseY = 0, baseRotation = 0, z;
 
-    public Zoom (OrthographicCamera camera) {
+    BoundingBox left, right, top, bottom = null;
+
+    public void setWorldBounds(int left, int bottom, float width, float height) {
+        float top = bottom + height;
+        float right = left + width;
+
+        this.left = new BoundingBox(new Vector3(left, 0, 0), new Vector3(left, top, 0));
+        this.right = new BoundingBox(new Vector3(right , 0, 0), new Vector3(right , top, 0));
+        this.top = new BoundingBox(new Vector3(0, top, 0), new Vector3(right, top , 0));
+        this.bottom = new BoundingBox(new Vector3(0, bottom, 0), new Vector3(right, bottom, 0));
+
+    }
+
+    Vector3 lastPosition = new Vector3();
+    float lastZoom;
+
+    public void translateSafe(float x, float y) {
+        lastPosition.set(camera.position.x, camera.position.y, 0);
+        lastZoom = camera.zoom;
+        camera.translate(x, y);
+        camera.update();
+        ensureBounds();
+        camera.update();
+    }
+
+    public void ensureBounds() {
+        while(camera.frustum.boundsInFrustum(left)) {
+            camera.position.x += 0.1;
+            camera.update();
+        }
+        while(camera.frustum.boundsInFrustum(right)) {
+            camera.position.x -= 0.1;
+            camera.update();
+        }
+        while(camera.frustum.boundsInFrustum(bottom)) {
+            camera.position.y += 0.1;
+            camera.update();
+        }
+        while(camera.frustum.boundsInFrustum(top)) {
+            camera.position.y -= 0.1;
+            camera.update();
+        }
+        while(camera.frustum.boundsInFrustum(left)) {
+            camera.position.x += 0.01;
+            camera.update();
+        }
+        while(camera.frustum.boundsInFrustum(bottom)) {
+            camera.position.y += 0.01;
+            camera.update();
+        }
+        checkCamera();
+
+    }
+
+    public Zoom (OrthographicCamera camera, OrthographicCamera uiCamera) {
         this.camera = camera;
+        this.uiCamera = uiCamera;
     }
 
     public void setPoint(float x, float y, float x1, float y1) {
@@ -38,12 +95,19 @@ public class Zoom {
         camera.zoom /= scale;
         float xPnew = (x+x1)/2;
         float yPnew = (y+y1)/2;
-        camera.translate((xP - xPnew)*camera.zoom, (yPnew - yP)*camera.zoom);
-        camera.update();
+        float xMoveBy = (xP - xPnew)*camera.zoom;
+        float yMoveBy = (yPnew - yP)*camera.zoom;
 
-        checkCamera();
 
-        box.moveZoom((xP - xPnew)*camera.zoom, (yP - yPnew)*camera.zoom, camera.zoom, xP, yP);
+      //  box.moveZoom(xMoveBy, (yP - yPnew)*camera.zoom, camera.zoom, xP, yP);
+
+
+        translateSafe(xMoveBy, yMoveBy);
+
+
+
+
+
 
 	/*
 	    if (x > x1) {
@@ -76,6 +140,7 @@ public class Zoom {
 
     }
 
+
     public void touchUpAction (int pointer) {
         if (zooming && pointer == 0) {
             zooming = false;
@@ -98,6 +163,15 @@ public class Zoom {
         else if (camera.zoom < MAX_ZOOM) { camera.zoom = MAX_ZOOM; }
 
 
+     /*   if (baseY > box.yZoomMin) {
+            box.yZoomMin = baseY;
+        } else if (baseY < box.yZoomMax) {
+            box.yZoomMax = baseY;
+        }  else if (baseX > box.xZoomMin) {
+            box.xZoomMin = baseX;
+        } else if (baseX < box.xZoomMax) {
+            box.xZoomMax = baseX;
+        }*/
     }
 
 

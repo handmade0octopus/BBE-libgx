@@ -55,9 +55,10 @@ public class MainScreen implements Screen {
         uiCamera.update();
 
         // Setting zoom and box.
-        zoom = new Zoom(camera);
+        zoom = new Zoom(camera, uiCamera);
         box = new Box(width, height);
         zoom.setBox(box);
+        zoom.setWorldBounds(0, 0,  width,  height);
 
         // Setting up batches and renderer
         batch = new SpriteBatch();
@@ -123,6 +124,10 @@ public class MainScreen implements Screen {
 
     @Override
     public void resize(int width, int height) {
+        updateEnvironment(width, height);
+    }
+
+    private void updateEnvironment(int width, int height) {
         // Called when window is resized or screen changes size.
         float w = width;
         float h = height;
@@ -146,6 +151,7 @@ public class MainScreen implements Screen {
 
         handler.updateMenu();
     }
+
 
     @Override
     public void pause() {

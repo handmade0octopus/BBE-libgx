@@ -5,6 +5,7 @@ import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.handmadeoctopus.BouncingBallEngine;
 import com.handmadeoctopus.entities.*;
 
 
@@ -109,6 +110,10 @@ public class InputHandler implements InputProcessor {
     public void update(float width, float height) {
         // Updates menu if change size
         slidingMenu.update(width, height);
+        float w = width;
+        float h = height;
+        float f = (h / w);
+        zoom.setWorldBounds(0, 0, BouncingBallEngine.WIDTH, (BouncingBallEngine.WIDTH*f));
     }
 
     public void updateMenu() {
