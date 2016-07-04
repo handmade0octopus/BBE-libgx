@@ -57,7 +57,6 @@ public class MainScreen implements Screen {
         // Setting zoom and box.
         zoom = new Zoom(camera, uiCamera);
         box = new Box(width, height);
-        zoom.setBox(box);
         zoom.setWorldBounds(0, 0,  width,  height);
 
         // Setting up batches and renderer
@@ -93,6 +92,7 @@ public class MainScreen implements Screen {
         camera.update();
         uiCamera.update();
 
+        // After camera is updated, projection matrix is set on batch, batchUi and (shape) renderer.
         batch.setProjectionMatrix(camera.combined);
         batchUi.setProjectionMatrix(uiCamera.combined);
         renderer.setProjectionMatrix(batch.getProjectionMatrix());
@@ -138,7 +138,7 @@ public class MainScreen implements Screen {
 
         box.set(0, 0, this.width, this.height);
 
-
+        zoom.setWorldBounds(0, 0,  this.width,  this.height);
         camera.setToOrtho(false, this.width, this.height);
         camera.position.set(camera.viewportWidth / 2f, camera.viewportHeight / 2f, 0);
         camera.update();

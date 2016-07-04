@@ -59,6 +59,8 @@ public class InputHandler implements InputProcessor {
         if (Gdx.input.isTouched(0)) {
             zoom.x = Gdx.input.getX(0);
             zoom.y = Gdx.input.getY(0);
+
+            // z & q translate input to screen size.
             slidingMenu.onClick(z*Gdx.input.getX(0), q*(Gdx.graphics.getHeight()-Gdx.input.getY(0)));
         }
         if (Gdx.input.isTouched(1)) {

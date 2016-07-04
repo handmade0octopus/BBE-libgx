@@ -6,18 +6,20 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.handmadeoctopus.entities.Box;
 
+// Zoom class handles all zoom instances
 public class Zoom {
-
     OrthographicCamera camera, uiCamera;
     boolean zooming = false;
-    Box box;
 
+    // Mix and max zoom
     static final float MIN_ZOOM = 1f, MAX_ZOOM = 0.01f;
 
+    // Variables for calculating zoom
     public float x, y, x1, y1, xP, yP, baseX = 0, baseY = 0, baseRotation = 0, z;
 
     BoundingBox left, right, top, bottom = null;
 
+    // Function set world bounds for ensuring our camera won't leave boundries
     public void setWorldBounds(int left, int bottom, float width, float height) {
         float top = bottom + height;
         float right = left + width;
@@ -32,6 +34,7 @@ public class Zoom {
     Vector3 lastPosition = new Vector3();
     float lastZoom;
 
+    // Translate camera within safe boundingBox
     public void translateSafe(float x, float y) {
         lastPosition.set(camera.position.x, camera.position.y, 0);
         lastZoom = camera.zoom;
@@ -41,6 +44,7 @@ public class Zoom {
         camera.update();
     }
 
+    // Checks if camera is within the boudns.
     public void ensureBounds() {
         while(camera.frustum.boundsInFrustum(left)) {
             camera.position.x += 0.1;
@@ -67,14 +71,17 @@ public class Zoom {
             camera.update();
         }
         checkCamera();
-
     }
 
+
+    // Constructor with cameras we need to use.
     public Zoom (OrthographicCamera camera, OrthographicCamera uiCamera) {
         this.camera = camera;
         this.uiCamera = uiCamera;
     }
 
+
+    // Sets base point which is position of screen atm
     public void setPoint(float x, float y, float x1, float y1) {
         if (!zooming) {
             this.x = x;
@@ -85,9 +92,9 @@ public class Zoom {
             yP = (y+y1)/2;
             zooming = true;
         }
-
     }
 
+    // Sets zoom from points.
     public void setZoom(float x, float y, float x1, float y1) {
         double oldDist = (Math.pow(this.x-this.x1,2) + Math.pow(this.y-this.y1,2));
         double newDist = (Math.pow(x-x1,2) + Math.pow(y-y1,2));
@@ -98,16 +105,7 @@ public class Zoom {
         float xMoveBy = (xP - xPnew)*camera.zoom;
         float yMoveBy = (yPnew - yP)*camera.zoom;
 
-
-      //  box.moveZoom(xMoveBy, (yP - yPnew)*camera.zoom, camera.zoom, xP, yP);
-
-
         translateSafe(xMoveBy, yMoveBy);
-
-
-
-
-
 
 	/*
 	    if (x > x1) {
@@ -140,7 +138,7 @@ public class Zoom {
 
     }
 
-
+    // Helps update and ensure position of camera.
     public void touchUpAction (int pointer) {
         if (zooming && pointer == 0) {
             zooming = false;
@@ -158,36 +156,25 @@ public class Zoom {
         }
     }
 
+
+    // Checks if camera zoom is within set borders.
     void checkCamera() {
         if (camera.zoom > MIN_ZOOM) { camera.zoom = MIN_ZOOM; }
         else if (camera.zoom < MAX_ZOOM) { camera.zoom = MAX_ZOOM; }
-
-
-     /*   if (baseY > box.yZoomMin) {
-            box.yZoomMin = baseY;
-        } else if (baseY < box.yZoomMax) {
-            box.yZoomMax = baseY;
-        }  else if (baseX > box.xZoomMin) {
-            box.xZoomMin = baseX;
-        } else if (baseX < box.xZoomMax) {
-            box.xZoomMax = baseX;
-        }*/
     }
 
-
+    // Called when you want to move camera x, y is position of first and x1, y1 of second finger
     public void dragged(float x, float y, float x1, float y1) {
         setPoint(x, y, x1, y1);
         setZoom(x, y, x1, y1);
     }
 
+
+    // Resets camera to default value
     public void reset() {
         camera.zoom = 1;
         camera.position.set(camera.viewportWidth / 2f, camera.viewportHeight / 2f, 0);
         baseX = 0;
         baseY = 0;
-    }
-
-    public void setBox(Box box) {
-        this.box = box;
     }
 }

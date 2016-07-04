@@ -13,16 +13,17 @@ import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.handmadeoctopus.BouncingBallEngine;
 
 public class SlidingMenu {
-        Stage stage;
-        Skin skin;
-        TextButton textButton;
+        Stage stage; // Main stage of our menu
+        Skin skin; // Skin for our buttons.
+        TextButton menuButton; // main menu button
         TextButton.TextButtonStyle textButtonStyle;
-        InputHandler handler;
-        Settings settings;
-        Menu menu;
-        int inter = 0;
-        boolean visible = false, menuOn = false;
-        float z, q;
+        InputHandler handler; // Input handler where all input is handled, passed from main class.
+        Settings settings; // All settings of the game, passed from main class.
+        Menu menu; // Main menu of
+
+        int inter = 0; // Variable for fading window.
+        boolean visible = false, menuOn = false; //  variables to controll menu visibility
+        float z, q; // additional variable of screen size
 
 
         public SlidingMenu(final Stage stage, final InputHandler handler, Settings settings) {
@@ -53,23 +54,22 @@ public class SlidingMenu {
                 textButtonStyle.down = skin.newDrawable("white", Color.DARK_GRAY);
                 //   textButtonStyle.checked = skin.newDrawable("white", Color.BLUE);
                 textButtonStyle.over = skin.newDrawable("white", Color.LIGHT_GRAY);
-
                 textButtonStyle.font = skin.getFont("default");
-
                 skin.add("default", textButtonStyle);
 
                 // Create a button with the "default" TextButtonStyle. A 3rd parameter can be used to specify a name other than "default".
-                textButton=new TextButton("MENU",textButtonStyle);
-                textButton.setWidth(100);
-                textButton.setHeight(50);
-                textButton.setPosition(stage.getWidth()-textButton.getWidth(), stage.getHeight()-textButton.getHeight());
+                menuButton =new TextButton("MENU",textButtonStyle);
+                menuButton.setWidth(100);
+                menuButton.setHeight(50);
+                menuButton.setPosition(stage.getWidth()- menuButton.getWidth(), stage.getHeight()- menuButton.getHeight());
 
 
+                // Setting up menu
+                menu = new Menu(stage, skin, settings, menuButton, this);
 
-                menu = new Menu(stage, skin, settings, textButton, this);
+                // Adding listener to "Menu" button which hides menu if clicked.
 
-
-                textButton.addListener(new InputListener() {
+                menuButton.addListener(new InputListener() {
 
                         public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
                                 setMenu(false);
@@ -79,8 +79,11 @@ public class SlidingMenu {
         }
 
         public void draw() {
+                // Make actions and draws stage.
                 stage.act(Math.min(Gdx.graphics.getDeltaTime(), 1/30f));
                 stage.draw();
+
+                // If menu is clicked, adds 'inter' timer on. If inter is >= 100, menu fades out.
                 if (visible && !menuOn) { inter++; }
                 if (inter >= 100) {
                         menu.fadeOut(0.5f);
@@ -89,6 +92,7 @@ public class SlidingMenu {
                 }
         }
 
+        // Sets menu on or off.
         public void setMenu(boolean on) {
                 if (on) {
                         Gdx.input.setInputProcessor(stage);
@@ -100,13 +104,15 @@ public class SlidingMenu {
                         visible = false;
                         inter = 0;
                         menu.fadeOut(0.5f);
-                        textButton.setChecked(false);
+                        menuButton.setChecked(false);
                 }
         }
 
+        // This happen when "Menu" button is clicked.
         public void onClick(float x, float y) {
-                if(x > textButton.getX() && x < textButton.getX() + textButton.getWidth() && y > textButton.getY()
-                        && y < textButton.getY() + textButton.getHeight()) {
+                // Checks if input is inside borders.
+                if(x > menuButton.getX() && x < menuButton.getX() + menuButton.getWidth() && y > menuButton.getY()
+                        && y < menuButton.getY() + menuButton.getHeight()) {
                         if (inter == 0) {
                                 menu.fadeIn(0.5f);
                                 visible = true;
@@ -119,6 +125,7 @@ public class SlidingMenu {
                 menu.q = q;
         }
 
+        // Called when resize happens
         public void update(float width, float height) {
                 float w = width;
                 float h = height;
@@ -127,10 +134,11 @@ public class SlidingMenu {
                 stage.getViewport().update((int) width, (int) height, true);
                 stage.getViewport().setWorldWidth(BouncingBallEngine.WIDTH);
                 stage.getViewport().setWorldHeight(BouncingBallEngine.WIDTH*f);
-                textButton.setPosition(stage.getViewport().getWorldWidth()-textButton.getWidth(), stage.getViewport().getWorldHeight()-textButton.getHeight());
+                menuButton.setPosition(stage.getViewport().getWorldWidth()- menuButton.getWidth(), stage.getViewport().getWorldHeight()- menuButton.getHeight());
                 menu.update();
         }
 
+        // Update z & q variable for Menu.
         public void updateMenu(float z, float q) {
                 menu.z = z;
                 menu.q = q;

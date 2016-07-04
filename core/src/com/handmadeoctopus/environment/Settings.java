@@ -5,22 +5,28 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 
+
+// Settings class let you store, load, save and update main settings of the game.
 public class Settings {
+    // Variables for main settings
     int ballsQuantity, ballsSize, ballsTail, springiness, gravity, forces;
     boolean gravitation, ballsForces, reset = false;
-    Menu menu;
+    Menu menu; // To control and update after change in values
     Zoom zoom;
 
-    Preferences prefs;
-    
+    Preferences prefs; // Preferences stores, saves and loads games settings
+
+    // Maximum and minimum values of settings
     static float MAX_QUANT = 500, MAX_SIZE = 250, MAX_TAIL = 100, MAX_SPRINGINESS = 200, MAX_GRAVITY = 200, MAX_FORCES = 200;
 
 
+    // Loads prefs when created.
     public Settings() {
         prefs = Gdx.app.getPreferences(SettingsEnum.PREFS.s);
         load();
     }
 
+    // Sets all values if necessary.
     public void set(int ballsQuantity, int ballsSize, int ballsTail, int springiness, int gravity, int forces) {
         this.ballsQuantity = ballsQuantity;
         this.ballsSize = ballsSize;
@@ -32,6 +38,7 @@ public class Settings {
         update();
     }
 
+    // Loads all variables from memory
     void load() {
         ballsQuantity = prefs.getInteger(SettingsEnum.BALLSQUANTITY.s);
         ballsSize = prefs.getInteger(SettingsEnum.BALLSSIZE.s);
@@ -42,6 +49,7 @@ public class Settings {
         update();
     }
 
+    // Saves variables to memory.
     void save() {
         prefs.putInteger(SettingsEnum.BALLSQUANTITY.s, ballsQuantity);
         prefs.putInteger(SettingsEnum.BALLSSIZE.s, ballsSize);
@@ -52,6 +60,7 @@ public class Settings {
         prefs.flush();
     }
 
+    // Resets all all values to defaults
     public void resetDefaults() {
         ballsQuantity = 100;
         ballsSize = 50;
@@ -62,10 +71,12 @@ public class Settings {
         save();
     }
 
+    // Sets menu on or of if necessary.
     public void setMenu(Menu menu) {
         this.menu = menu;
     }
 
+    // Updates values on menu
     public void update() {
         if (forces > 0 ) { ballsForces = true; }
         else { ballsForces = false; }
@@ -75,6 +86,7 @@ public class Settings {
         if (menu != null) { menu.updateValues(); }
     }
 
+    // Set value depending on which button is called.
     public void set(float x, TextButton button, TextButton bgButton, boolean relative, boolean exact) {
         switch(SettingsEnum.valueOf(button.getName())) {
             case RESET: menu.resetValues(); break;
@@ -100,15 +112,18 @@ public class Settings {
         }
     }
 
+    // Use when you want to increase or decrease by certain value
     public void set(float x, TextButton button, TextButton bgButton, boolean relative) {
         set(x, button, bgButton, relative, false);
     }
 
+    // Use when you want to set certain value.
     public void set(float x, TextButton button, TextButton bgButton) {
         set(x, button, bgButton, false, true);
     }
 
 
+    // Sets parameters depending on what you put into this function
     int setBallsParam(float newValue, TextButton button, TextButton bgButton, boolean relative,
                         boolean exact, float var, float min, float max) {
         float newQuant = 0;
@@ -144,7 +159,7 @@ public class Settings {
         return (int) newQuant;
     }
 
-
+    // Called when input is dragged.
     public void drag(float x, TextButton button, TextButton bgButton) {
         float xMin = bgButton.getX() + button.getWidth()/2;
         float xMax = bgButton.getX() + bgButton.getWidth() - button.getWidth()/2;
@@ -157,6 +172,7 @@ public class Settings {
         }
     }
 
+    // Sets or loads variables do not use outside class
     private float var(SettingsEnum settingsEnum, boolean set, float value) {
         switch(settingsEnum) {
             case BALLSQUANTITY:
@@ -193,11 +209,13 @@ public class Settings {
         }
     }
 
-    private void setVar(TextButton button, float value){
+    // Sets variable
+    void setVar(TextButton button, float value){
         var(SettingsEnum.valueOf(button.getName()), true, value);
         update();
     }
 
+    // Gets variable
     float getVar(TextButton button) {
         return var(SettingsEnum.valueOf(button.getName()), false, 0);
 
@@ -212,18 +230,23 @@ public class Settings {
         } */
     }
 
+    // Sets menu on or off
     void setMenu(boolean on) {
         menu.setMenu(on);
     }
 
+    // Sets zoom class to this one
     public void setZoom(Zoom zoom) {
         this.zoom = zoom;
     }
 
+    // Resets zoom if necessary
     public void resetZoom() {
         zoom.reset();
     }
 
+
+    // Enum with all variables and button names.
     enum SettingsEnum {
         RESET("RESET"),
         BALLSQUANTITY("BALLS' QUANTITY"),
