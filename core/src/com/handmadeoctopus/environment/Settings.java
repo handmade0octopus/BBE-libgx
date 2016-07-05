@@ -17,7 +17,18 @@ public class Settings {
     Preferences prefs; // Preferences stores, saves and loads games settings
 
     // Maximum and minimum values of settings
-    static float MAX_QUANT = 500, MAX_SIZE = 250, MAX_TAIL = 100, MAX_SPRINGINESS = 200, MAX_GRAVITY = 200, MAX_FORCES = 200;
+    public static final float MIN_QUANT = 0,
+            MAX_QUANT = 500,
+            MIN_SIZE = 1,
+            MAX_SIZE = 250,
+            MIN_TAIL = 0,
+            MAX_TAIL = 100,
+            MIN_SPRINGINESS = 0,
+            MAX_SPRINGINESS = 200,
+            MIN_GRAVITY = 0,
+            MAX_GRAVITY = 200,
+            MIN_FORCES = 0,
+            MAX_FORCES = 200;
 
 
     // Loads prefs when created.
@@ -91,22 +102,22 @@ public class Settings {
         switch(SettingsEnum.valueOf(button.getName())) {
             case RESET: menu.resetValues(); break;
             case BALLSQUANTITY:
-                ballsQuantity = setBallsParam(x, button, bgButton, relative, exact, ballsQuantity, 0, MAX_QUANT);
+                ballsQuantity = setBallsParam(x, button, bgButton, relative, exact, ballsQuantity, MIN_QUANT, MAX_QUANT);
                 break;
             case BALLSSIZE:
-                ballsSize = setBallsParam(x, button, bgButton, relative, exact, ballsSize, 1, MAX_SIZE);
+                ballsSize = setBallsParam(x, button, bgButton, relative, exact, ballsSize, MIN_SIZE, MAX_SIZE);
                 break;
             case BALLSTAIL:
-                ballsTail = setBallsParam(x, button, bgButton, relative, exact, ballsTail, 0, MAX_TAIL);
+                ballsTail = setBallsParam(x, button, bgButton, relative, exact, ballsTail, MIN_TAIL, MAX_TAIL);
                 break;
             case SPRINGINESS:
-                springiness = setBallsParam(x, button, bgButton, relative, exact, springiness, 0, MAX_SPRINGINESS);
+                springiness = setBallsParam(x, button, bgButton, relative, exact, springiness, MIN_SPRINGINESS, MAX_SPRINGINESS);
                 break;
             case GRAVITY:
-                gravity = setBallsParam(x, button, bgButton, relative, exact, gravity, 0, MAX_GRAVITY);
+                gravity = setBallsParam(x, button, bgButton, relative, exact, gravity, MIN_GRAVITY, MAX_GRAVITY);
                 break;
             case FORCES:
-                forces = setBallsParam(x, button, bgButton, relative, exact, forces, 0, MAX_FORCES);
+                forces = setBallsParam(x, button, bgButton, relative, exact, forces, MIN_FORCES, MAX_FORCES);
                 break;
             case RELOAD: break;
         }
@@ -252,9 +263,9 @@ public class Settings {
         BALLSQUANTITY("BALLS' QUANTITY"),
         BALLSSIZE("BALLS' SIZE"),
         BALLSTAIL("BALLS' TAIL"),
-        SPRINGINESS("SPRINGINESS"),
-        GRAVITY("GRAVITY"),
-        FORCES("FORCES"),
+        SPRINGINESS("SPRINGINESS %"),
+        GRAVITY("GRAVITY %"),
+        FORCES("FORCES %"),
         RELOAD("RELOAD"),
         BLACKS("  "),
         PREFS("GAMEPREFS");
