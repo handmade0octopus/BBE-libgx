@@ -33,6 +33,7 @@ public class MainEngine {
         this.box = box;
         settings.setMainEngine(this);
         balls = new Array<Ball>();
+        TEXTURE.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         init();
     }
 
@@ -64,7 +65,6 @@ public class MainEngine {
         gravitation = settings.gravitation;
         ballsForces = settings.ballsForces;
     }
-
 
     //Reloads balls
     public void reload() {
