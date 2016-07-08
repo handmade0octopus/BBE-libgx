@@ -9,7 +9,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 // Settings class let you store, load, save and update main settings of the game.
 public class Settings {
     // Variables for main settings
-    int ballsQuantity, ballsSize, ballsTail, springiness, gravity, forces, quality;
+    int ballsQuantity, ballsSize, ballsTail, springiness, gravity, forces, speed;
     boolean gravitation, ballsForces, reset = false;
     Menu menu; // To control and update after change in values
     Zoom zoom;
@@ -26,11 +26,12 @@ public class Settings {
             MAX_TAIL = 100,
             MIN_SPRINGINESS = 0,
             MAX_SPRINGINESS = 200,
-            MIN_GRAVITY = 0,
-            MAX_GRAVITY = 200,
-            MIN_FORCES = 0,
-            MAX_FORCES = 200;
-    public static final int MIN_QUALITY = 18, MAX_QUALITY = 360;
+            MIN_GRAVITY = -50,
+            MAX_GRAVITY = 50,
+            MIN_FORCES = -200,
+            MAX_FORCES = 200,
+            MIN_SPEED = 10,
+            MAX_SPEED = 1000;
 
 
     // Loads prefs when created.
@@ -59,7 +60,7 @@ public class Settings {
         springiness = prefs.getInteger(SettingsEnum.SPRINGINESS.s);
         gravity = prefs.getInteger(SettingsEnum.GRAVITY.s);
         forces = prefs.getInteger(SettingsEnum.FORCES.s);
-        quality = prefs.getInteger(SettingsEnum.QUALITY.s);
+        speed = prefs.getInteger(SettingsEnum.SPEED.s);
         update();
     }
 
@@ -71,7 +72,7 @@ public class Settings {
         prefs.putInteger(SettingsEnum.SPRINGINESS.s, springiness);
         prefs.putInteger(SettingsEnum.GRAVITY.s, gravity);
         prefs.putInteger(SettingsEnum.FORCES.s, forces);
-        prefs.putInteger(SettingsEnum.QUALITY.s, quality);
+        prefs.putInteger(SettingsEnum.SPEED.s, speed);
         prefs.flush();
     }
 
@@ -82,8 +83,8 @@ public class Settings {
         ballsTail = 10;
         springiness = 100;
         gravity = 0;
-        forces = 100;
-        quality = 360;
+        forces = 0;
+        speed = 600;
         save();
         update();
     }
@@ -95,12 +96,17 @@ public class Settings {
 
     // Updates values on menu
     public void update() {
-        if (forces > 0 ) { ballsForces = true; }
-        else { ballsForces = false; }
-        if (gravity > 0) { gravitation = true; }
-        else { gravitation = false; }
+        check();
 
         if (menu != null) { menu.updateValues(); }
+    }
+
+    // Checks if gravitation or forces changed.
+    private void check() {
+        if (forces != 0 ) { ballsForces = true; }
+        else { ballsForces = false; }
+        if (gravity != 0) { gravitation = true; }
+        else { gravitation = false; }
     }
 
     // Set value depending on which button is called.
@@ -125,11 +131,15 @@ public class Settings {
             case FORCES:
                 forces = setBallsParam(x, button, bgButton, relative, exact, forces, MIN_FORCES, MAX_FORCES);
                 break;
-            case QUALITY:
-                quality = setBallsParam(x, button, bgButton, relative, exact, quality, MIN_QUALITY, MAX_QUALITY);
+            case SPEED:
+                speed = setBallsParam(x, button, bgButton, relative, exact, speed, MIN_SPEED, MAX_SPEED);
                 break;
-            case RELOAD: break;
+            case RELOAD:
+                if(mainEngine != null) { mainEngine.reload(); }
+                break;
         }
+        check();
+        if(mainEngine != null) { mainEngine.update(SettingsEnum.valueOf(button.getName())); }
     }
 
     // Use when you want to increase or decrease by certain value
@@ -225,11 +235,11 @@ public class Settings {
                     forces = (int) value;
                     return 0;
                 } else { return forces; }
-            case QUALITY:
+            case SPEED:
                 if(set) {
-                    quality = (int) value;
+                    speed = (int) value;
                     return 0;
-                } else { return quality; }
+                } else { return speed; }
             default: return 0;
         }
     }
@@ -275,7 +285,7 @@ public class Settings {
         GRAVITY("GRAVITY %"),
         FORCES("FORCES %"),
         RELOAD("RELOAD"),
-        QUALITY("QUALITY"),
+        SPEED("SPEED"),
         BLACKS("  "),
         PREFS("GAMEPREFS");
 

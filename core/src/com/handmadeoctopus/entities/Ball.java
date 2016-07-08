@@ -3,8 +3,11 @@ package com.handmadeoctopus.entities;
 // Ball class which contains all ball variables and movement
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.utils.Array;
+import com.handmadeoctopus.environment.MainEngine;
 import com.handmadeoctopus.environment.Settings;
 import org.jblas.FloatMatrix;
 import org.jblas.Geometry;
@@ -15,7 +18,8 @@ public class Ball {
     // Position, size and speed of ball//
     public float radius, mass, x, y, speedX, speedY, xMin, xMax, yMin, yMax;
     public float gravity = 0, force = 0, springiness = 1;
-    public int quality = Settings.MAX_QUALITY;
+    public Texture texture = MainEngine.TEXTURE;;
+    public float speed = 6;
     public Boolean grow = false, gravitation = true, hits = true, forces = true, touchable = false;
     Box box;
     Random rnd = new Random();
@@ -23,7 +27,7 @@ public class Ball {
 
     // Tail
     int tail = 0;
-    static int TAIL_QUALITY = 4;
+    static int TAIL_QUALITY = 16;
     Array<Position> lastPosition = new Array<Position>();
 
     // Main constructor
@@ -63,8 +67,8 @@ public class Ball {
         float sX = 0;
         float sY = 0;
         while (sX == 0 && sY == 0) {
-            sX = rnd.nextFloat() * 4 - 2;
-            sY = rnd.nextFloat() * 4 - 2;
+            sX = rnd.nextFloat() * speed - speed/2f;
+            sY = rnd.nextFloat() * speed - speed/2f;
         }
         speedX = sX;
         speedY = sY;
@@ -88,7 +92,7 @@ public class Ball {
     }
 
     // Sets other ball parameters
-    public void setBallParameters(int gravity, int spring, int tail, int force, int quality, boolean gravitation, boolean forces, Box box) {
+    public void setBallParameters(int gravity, int spring, int tail, int force, int speed, boolean gravitation, boolean forces, Box box) {
         this.force = force;
         this.box = box;
         this.gravitation = gravitation;
@@ -119,20 +123,20 @@ public class Ball {
             forces = false;
         }
 
-        if (tail >= Settings.MIN_TAIL && tail <= Settings.MAX_TAIL) {
-            configTail(tail);
-        } else { this.tail = 0; }
+        setTail(tail);
 
-        if (quality >= Settings.MIN_QUALITY && tail <= Settings.MAX_QUALITY) {
-            this.quality = quality;
-        } else { this.quality = 360; }
+        if (speed >= Settings.MIN_SPEED && speed <= Settings.MAX_SPEED) {
+            this.speed = speed/100f;
+            randomSpeedXY();
+        } else { this.speed = 6; }
     }
 
     // Moves ball
-    public void move() {
+    public Ball move() {
         saveTail();
         x += speedX;
         y += speedY;
+        return this;
     }
 
     // Saves ball position
@@ -143,7 +147,7 @@ public class Ball {
                 lastPosition.get(i).set(lastPosition.get(i-TAIL_QUALITY));
             }
             for(int i = 0; i < TAIL_QUALITY; i++) {
-                lastPosition.get(i).set((float) (x-(i*speedX/(tailQ))), (float) (y-(i*speedY/(tailQ))));
+                lastPosition.get(i).set((float) (x+Math.pow(-1,i)*(i*speedX/(tailQ))), (float) (y+Math.pow(-1,i)*(i*speedY/(tailQ))));
             }
         }
     }
@@ -287,8 +291,15 @@ public class Ball {
         return null;
     }
 
+    // Sets tail to certain lenghth
+    public void setTail(int tail) {
+        if (tail >= Settings.MIN_TAIL && tail <= Settings.MAX_TAIL) {
+            configTail(tail);
+        } else { this.tail = 0; }
+    }
+
     // Setups tail
-    public void configTail (int tail) {
+    private void configTail (int tail) {
         this.tail = tail;
         lastPosition.setSize(tail*TAIL_QUALITY);
         for(int i = 0; i < tail*TAIL_QUALITY; i++) {
@@ -301,7 +312,7 @@ public class Ball {
         move();
         renderTail(renderer);
         renderer.setColor(clr);
-        renderer.circle(x, y, radius, quality);
+        renderer.circle(x, y, radius, 180);
     }
 
     // Renders tail after ball
@@ -315,9 +326,32 @@ public class Ball {
             renderer.setColor(new Color(this.clr.r, this.clr.g, this.clr.b, this.clr.a*alphaC));
             x = lastPosition.get(i).x;
             y = lastPosition.get(i).y;
-            renderer.circle(x, y, radius, quality);
+            renderer.circle(x, y, radius, 180);
         }
     }
+
+    // Draws ball BATCH
+    public void draw(SpriteBatch batch) {
+        renderTail(batch);
+        batch.setColor(this.clr.r, this.clr.g, this.clr.b, this.clr.a);
+        batch.draw(texture, x-radius, y-radius, 2*radius, 2*radius);
+    }
+
+    // Renders tail after ball BATCH
+    private void renderTail(SpriteBatch batch) {
+        float x, y, alphaC, tailQ, tailL, d;
+        for(int i = 0; i < tail*TAIL_QUALITY; i++) {
+            tailQ = TAIL_QUALITY;
+            tailL = tail;
+            d = i;
+            alphaC = ((tailQ*tailL-d)/(tailQ*tailL))/5;
+            batch.setColor(new Color(this.clr.r, this.clr.g, this.clr.b, this.clr.a*alphaC));
+            x = lastPosition.get(i).x;
+            y = lastPosition.get(i).y;
+            batch.draw(texture, x-radius, y-radius, 2*radius, 2*radius);
+        }
+    }
+
 
     // Performs all ball actions
     public void act(Ball otherBall) {

@@ -6,9 +6,8 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.handmadeoctopus.BouncingBallEngine;
-import com.handmadeoctopus.entities.*;
 
-
+// Main class handling all inputs
 public class InputHandler implements InputProcessor {
 
     OrthographicCamera camera, uiCamera; // Carried over cameras
@@ -56,18 +55,23 @@ public class InputHandler implements InputProcessor {
         slidingMenu.z = z;
         slidingMenu.q = q;
 
-        if (Gdx.input.isTouched(0)) {
+
+        if (Gdx.input.isTouched(0) && settings.mainEngine.newBall == null) {
             zoom.x = Gdx.input.getX(0);
             zoom.y = Gdx.input.getY(0);
 
             // z & q translate input to screen size.
             slidingMenu.onClick(z*Gdx.input.getX(0), q*(Gdx.graphics.getHeight()-Gdx.input.getY(0)));
         }
-        if (Gdx.input.isTouched(1)) {
+        if (Gdx.input.isTouched(1) && settings.mainEngine.newBall == null) {
             zoom.x1 = Gdx.input.getX(1);
             zoom.y1 = Gdx.input.getY(1);
             zoom.xP = (zoom.x+zoom.x1)/2;
             zoom.yP = (zoom.y+zoom.y1)/2;
+        }
+
+        if(!slidingMenu.visible) {
+            settings.mainEngine.actionDown(x, y);
         }
         return false;
     }
@@ -75,15 +79,26 @@ public class InputHandler implements InputProcessor {
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
         // All touch up actions are made.
-        zoom.touchUpAction(pointer);
+        x = camera.unproject(new Vector3(Gdx.input.getX(0), Gdx.input.getY(0), 0)).x;
+        y = camera.unproject(new Vector3(Gdx.input.getX(0), Gdx.input.getY(0), 0)).y;
+
+        if(settings.mainEngine.newBall == null){
+            zoom.touchUpAction(pointer);
+        } else  {
+            settings.mainEngine.actionUp(x, y);
+        }
         return false;
     }
 
     @Override
     public boolean touchDragged(int screenX, int screenY, int pointer) {
         // Dragged only when botch fingers are down.
-        if (Gdx.input.isTouched(0) && Gdx.input.isTouched(1)) {
+        x1 = camera.unproject(new Vector3(Gdx.input.getX(1), Gdx.input.getY(1), 0)).x;
+        y1 = camera.unproject(new Vector3(Gdx.input.getX(1), Gdx.input.getY(1), 0)).y;
+        if (Gdx.input.isTouched(0) && Gdx.input.isTouched(1) && settings.mainEngine.newBall == null) {
             zoom.dragged(Gdx.input.getX(0), Gdx.input.getY(0), Gdx.input.getX(1), Gdx.input.getY(1));
+        } else if (settings.mainEngine.newBall != null && Gdx.input.isTouched(0) && Gdx.input.isTouched(1)) {
+            settings.mainEngine.newBall.setPosition(x1,y1);
         }
         return false;
     }
@@ -98,9 +113,12 @@ public class InputHandler implements InputProcessor {
     @Override
     public boolean scrolled(int amount) {
         // When mouse middle button is scrolled.
-        camera.zoom *= (10f+amount)/10f;
-        zoom.checkCamera();
-        camera.update();
+        if(settings.mainEngine.newBall == null) {
+            camera.zoom *= (10f+amount)/10f;
+            zoom.checkCamera();
+            camera.update();
+        }
+
         return false;
     }
 

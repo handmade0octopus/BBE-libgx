@@ -111,13 +111,13 @@ public class MainScreen implements Screen {
         // Method for drawing all entities and UI.
         renderer.begin(ShapeRenderer.ShapeType.Filled);
 
-        box.draw(renderer);
 
-        mainEngine.drawBalls(renderer);
+        box.draw(renderer);
 
         renderer.end();
 
         batch.begin();
+        mainEngine.drawBalls(batch);
         batch.end();
 
         batchUi.begin();

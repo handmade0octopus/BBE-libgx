@@ -38,7 +38,7 @@ public class SlidingMenu {
                 // recommended solely for the convenience of getting a texture, region, etc as a drawable, tinted drawable, etc.
                 skin = new Skin();
                 // Generate a 1x1 white texture and store it in the skin named "white".
-                Pixmap pixmap = new Pixmap(100, 100, Pixmap.Format.RGBA8888);
+                Pixmap pixmap = new Pixmap(1000, 1000, Pixmap.Format.RGBA8888);
                 pixmap.setColor(Color.WHITE);
                 pixmap.fill();
 
@@ -46,6 +46,7 @@ public class SlidingMenu {
 
                 // Store the default libgdx font under the name "default".
                 BitmapFont bfont = new BitmapFont();
+                bfont.getRegion().getTexture().setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
                 skin.add("default", bfont);
 
                 // Configure a TextButtonStyle and name it "default". Skin resources are stored by type, so this doesn't overwrite the font.
@@ -59,8 +60,8 @@ public class SlidingMenu {
 
                 // Create a button with the "default" TextButtonStyle. A 3rd parameter can be used to specify a name other than "default".
                 menuButton =new TextButton("MENU",textButtonStyle);
-                menuButton.setWidth(100);
-                menuButton.setHeight(50);
+                menuButton.setWidth(stage.getViewport().getWorldWidth()*0.10f);
+                menuButton.setHeight(stage.getViewport().getWorldWidth()*0.05f);
                 menuButton.setPosition(stage.getWidth()- menuButton.getWidth(), stage.getHeight()- menuButton.getHeight());
 
 
@@ -115,6 +116,7 @@ public class SlidingMenu {
                         && y < menuButton.getY() + menuButton.getHeight()) {
                         if (inter == 0) {
                                 menu.fadeIn(0.5f);
+                                setMenu(true);
                                 visible = true;
                         }
                         if (inter > 0) {

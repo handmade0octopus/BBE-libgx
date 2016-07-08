@@ -70,7 +70,7 @@ public class Menu {
         addSlider("SPRINGINESS");
         addSlider("GRAVITY");
         addSlider("FORCES");
-        addSlider("QUALITY");
+        addSlider("SPEED");
         addButton("RELOAD");
 
         float lastY = stageEntry.get(stageEntry.size - 1).getY();
