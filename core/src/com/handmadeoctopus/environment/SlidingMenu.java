@@ -134,7 +134,8 @@ public class SlidingMenu {
                 stage.getViewport().update((int) width, (int) height, true);
                 stage.getViewport().setWorldWidth(BouncingBallEngine.WIDTH);
                 stage.getViewport().setWorldHeight(BouncingBallEngine.WIDTH*f);
-                menuButton.setPosition(stage.getViewport().getWorldWidth()- menuButton.getWidth(), stage.getViewport().getWorldHeight()- menuButton.getHeight());
+                menuButton.setPosition(stage.getViewport().getWorldWidth() - menuButton.getWidth(),
+                        stage.getViewport().getWorldHeight() - menuButton.getHeight());
                 menu.update();
         }
 

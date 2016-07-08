@@ -3,27 +3,29 @@ package com.handmadeoctopus.entities;
 // Ball class which contains all ball variables and movement
 
 import com.badlogic.gdx.graphics.Color;
-
-import java.util.Random;
-
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.utils.Array;
 import com.handmadeoctopus.environment.Settings;
 import org.jblas.FloatMatrix;
 import org.jblas.Geometry;
 
+import java.util.Random;
+
 public class Ball {
     // Position, size and speed of ball
     public float radius, mass, x, y, speedX, speedY, xMin, xMax, yMin, yMax;
-    public float gravity = 0, force = 0, spring = 1;
+    public float gravity = 0, force = 0, springiness = 1;
+    public int quality = Settings.MAX_QUALITY;
     public Boolean grow = false, gravitation = true, hits = true, forces = true, touchable = false;
     Box box;
     Random rnd = new Random();
     Color clr;
 
+    int test = 0;
+
     // Tail
     int tail = 0;
-    static int TAIL_QUALITY = 3;
+    static int TAIL_QUALITY = 1;
     Array<Position> lastPosition = new Array<Position>();
 
     // Main constructor
@@ -63,8 +65,8 @@ public class Ball {
         float sX = 0;
         float sY = 0;
         while (sX == 0 && sY == 0) {
-            sX = rnd.nextFloat() * 6 - 3;
-            sY = rnd.nextFloat() * 6 - 3;
+            sX = rnd.nextFloat() * 4 - 2;
+            sY = rnd.nextFloat() * 4 - 2;
         }
         speedX = sX;
         speedY = sY;
@@ -73,7 +75,7 @@ public class Ball {
     // Sets all ball values
     public void set(float radius, float x, float y, float speedX, float speedY, Color clr) {
         this.radius = radius;
-        this.mass = (float) 3.14*radius*radius;
+        this.mass = 3.14f*radius*radius;
         this.x = x;
         this.y = y;
         this.clr = clr;
@@ -88,40 +90,53 @@ public class Ball {
     }
 
     // Sets other ball parameters
-    public void setBallParameters(float gravity, float spring, int tail, float force, Box box) {
+    public void setBallParameters(int gravity, int spring, int tail, int force, int quality, boolean gravitation, boolean forces, Box box) {
         this.force = force;
         this.box = box;
+        this.gravitation = gravitation;
+        this.forces = forces;
 
         xMax = box.xMax;
         yMax = box.yMax;
         xMin = box.xMin;
         yMin = box.yMin;
 
-        if (gravity > Settings.MIN_GRAVITY && gravity <= Settings.MAX_GRAVITY) { this.gravity = gravity/100; }
+        if (gravity > Settings.MIN_GRAVITY && gravity <= Settings.MAX_GRAVITY) {
+            this.gravity = gravity/100f;
+            gravitation = true;
+        }
         else {
             this.gravity = 0;
             gravitation = false;
         }
 
-        if (spring > Settings.MIN_SPRINGINESS && spring <= Settings.MAX_SPRINGINESS) { this.spring = spring/100; }
-        else { this.spring = 1; }
+        if (spring > Settings.MIN_SPRINGINESS && spring <= Settings.MAX_SPRINGINESS) { this.springiness = spring/100f; }
+        else { this.springiness = 1; }
 
         if (force > Settings.MIN_FORCES && gravity <= Settings.MAX_FORCES) {
-            this.force = force/100;
+            this.force = force/100f;
             forces = true;
         } else {
             this.force = 0;
             forces = false;
         }
 
-        if (tail > Settings.MIN_TAIL && tail < Settings.MAX_TAIL) {
+        if (tail >= Settings.MIN_TAIL && tail <= Settings.MAX_TAIL) {
             configTail(tail);
         } else { this.tail = 0; }
+
+        if (quality >= Settings.MIN_QUALITY && tail <= Settings.MAX_QUALITY) {
+            this.quality = quality;
+        } else { this.quality = 360; }
     }
 
     // Moves ball
     public void move() {
-        saveTail();
+        if (test >= 20) {
+            saveTail();
+            test = 0;
+        }
+        test++;
         x += speedX;
         y += speedY;
     }
@@ -129,11 +144,12 @@ public class Ball {
     // Saves ball position
     private void saveTail() {
         if (tail > 0) {
+            float tailQ = TAIL_QUALITY;
             for(int i = TAIL_QUALITY; i < tail*TAIL_QUALITY; i++) {
                 lastPosition.get(i).set(lastPosition.get(i-TAIL_QUALITY));
             }
             for(int i = 0; i < TAIL_QUALITY; i++) {
-                lastPosition.get(i).set(x-(i*speedX/TAIL_QUALITY), y-(i*speedY/TAIL_QUALITY));
+                lastPosition.get(i).set(x-(i*speedX/tailQ), y-(i*speedY/tailQ));
             }
         }
     }
@@ -141,8 +157,8 @@ public class Ball {
     // Slows ball if you need to slow it only a little, higher number = less slow, 1 = no change
     void slow(float less) {
         if (less <= 0) { less = 1; }
-        speedY *= spring/less;
-        speedX *= spring/less;
+        speedY *= springiness /less;
+        speedX *= springiness /less;
         if (Math.abs(speedX) < 0.01) { speedX = 0; }
         if (Math.abs(speedY) < 0.01) { speedY = 0; }
     }
@@ -162,12 +178,12 @@ public class Ball {
 
         // When ball collides with box
         if (x + radius + speedX > xMax || x - radius + speedX < xMin) {
-            speedX = -spring * speedX;
+            speedX = -springiness * speedX;
             if (x - radius < xMin) { x = xMin + radius; }
             else if (x + radius > xMax) { x = xMax - radius; }
         }
         if (y + radius + speedY > yMax || y - radius + speedY < yMin) {
-            speedY = -spring * speedY;
+            speedY = -springiness * speedY;
             if (y - radius < yMin) { y = yMin + radius; }
             else if (y + radius + speedY > yMax) { y = yMax - radius; }
         }
@@ -198,20 +214,21 @@ public class Ball {
                 otherBall.speedX = v2p.get(0);
                 otherBall.speedY = v2p.get(1);
 
-                while (totalRadius >= distance) {
+                if (totalRadius >= distance) {
+                    float move = 1f;
                     if ((this.x) - (otherBall.x) > 0) {
-                        this.x += 0.1;
-                        otherBall.x -= 0.1;
+                        this.x += move;
+                        otherBall.x -= move;
                     } else if ((this.x) - (otherBall.x) < 0) {
-                        this.x -= 0.1;
-                        otherBall.x += 0.1;
+                        this.x -= move;
+                        otherBall.x += move;
                     }
                     if ((this.y) - (otherBall.y) > 0) {
-                        this.y += 0.1;
-                        otherBall.y -= 0.1;
+                        this.y += move;
+                        otherBall.y -= move;
                     } else if ((this.y) - (otherBall.y) < 0) {
-                        this.y -= 0.1;
-                        otherBall.y += 0.1;
+                        this.y -= move;
+                        otherBall.y += move;
                     }
                 }
                 slow();
@@ -250,7 +267,7 @@ public class Ball {
 
     // Performs gravity decrease in speedY
     public void gravity() {
-        if (gravitation && y + radius < yMax) { speedY += gravity; }
+        if (gravitation && y + radius < yMax) { speedY -= gravity; }
     }
 
     // Sets ball speed by new X, Y
@@ -287,21 +304,31 @@ public class Ball {
 
     // Draws ball
     public void draw(ShapeRenderer renderer) {
-        renderer.setColor(clr);
-        renderer.circle(x, y, radius);
+        move();
         renderTail(renderer);
+        renderer.setColor(clr);
+        renderer.circle(x, y, radius, quality);
     }
 
     // Renders tail after ball
     private void renderTail(ShapeRenderer renderer) {
-        float x, y;
-        Color clr;
+        float x, y, alphaC, tailQ, tailL, d;
         for(int i = 0; i < tail*TAIL_QUALITY; i++) {
-            clr = new Color(this.clr.r, this.clr.g, this.clr.b, this.clr.a*((TAIL_QUALITY*tail-i)/(TAIL_QUALITY*tail)));
-            renderer.setColor(clr);
+            tailQ = TAIL_QUALITY;
+            tailL = tail;
+            d = i;
+            alphaC = ((tailQ*tailL-d)/(tailQ*tailL));
+            renderer.setColor(new Color(this.clr.r, this.clr.g, this.clr.b, this.clr.a*alphaC));
             x = lastPosition.get(i).x;
             y = lastPosition.get(i).y;
-            renderer.circle(x, y, radius);
+            renderer.circle(x, y, radius, quality);
         }
+    }
+
+    // Performs all ball actions
+    public void act(Ball otherBall) {
+        grow();
+        gravity();
+        hit(otherBall);
     }
 }

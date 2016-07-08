@@ -3,10 +3,7 @@ package com.handmadeoctopus.environment;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -35,8 +32,11 @@ public class MainScreen implements Screen {
 
     private InputHandler handler; // Our input handler, handles all actions.
 
+    private MainEngine mainEngine; // Main engine of the game.
+
     public float width, height; // width and height of the in game screen.
 
+    Ball ball, ball2;
 
     public MainScreen(Game game) {
         this.game = game;
@@ -74,6 +74,9 @@ public class MainScreen implements Screen {
         // Setting up handler. And making it main handler of the game.
         handler = new InputHandler(camera, uiCamera, zoom, stage, settings);
         Gdx.input.setInputProcessor(handler);
+
+
+        mainEngine = new MainEngine(zoom, settings, box);
     }
 
 
@@ -89,6 +92,8 @@ public class MainScreen implements Screen {
         // Main rendering class. First screen is cleared, then cameras are updated and combined with batches and renderer.
         Gdx.gl.glClearColor(1, 1, 1, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
         camera.update();
         uiCamera.update();
 
@@ -99,19 +104,17 @@ public class MainScreen implements Screen {
 
 
         draw();
-
-        renderer.begin(ShapeRenderer.ShapeType.Filled);
-        renderer.setColor(Color.CYAN);
-        renderer.circle(camera.viewportWidth / 2f, camera.viewportHeight / 2f, 1, 180);
-        renderer.end();
-
-
+        Gdx.gl.glDisable(GL20.GL_BLEND);
     }
 
     private void draw() {
         // Method for drawing all entities and UI.
         renderer.begin(ShapeRenderer.ShapeType.Filled);
+
         box.draw(renderer);
+
+        mainEngine.drawBalls(renderer);
+
         renderer.end();
 
         batch.begin();

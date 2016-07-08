@@ -15,7 +15,7 @@ public class Zoom {
     static final float MIN_ZOOM = 1f, MAX_ZOOM = 0.01f;
 
     // Variables for calculating zoom
-    public float x, y, x1, y1, xP, yP, baseX = 0, baseY = 0, baseRotation = 0, z;
+    public float x, y, x1, y1, xP, yP, baseX = 0, baseY = 0, baseRotation = 0, z, q;
 
     BoundingBox left, right, top, bottom = null;
 
@@ -28,49 +28,60 @@ public class Zoom {
         this.right = new BoundingBox(new Vector3(right , 0, 0), new Vector3(right , top, 0));
         this.top = new BoundingBox(new Vector3(0, top, 0), new Vector3(right, top , 0));
         this.bottom = new BoundingBox(new Vector3(0, bottom, 0), new Vector3(right, bottom, 0));
-
+        firstPosition.set(camera.position.x, camera.position.y, 0);
     }
 
-    Vector3 lastPosition = new Vector3();
+    Vector3 lastPosition = new Vector3(), firstPosition = new Vector3();
     float lastZoom;
 
     // Translate camera within safe boundingBox
-    public void translateSafe(float x, float y) {
+    public void translateSafe(float x, float y, double scale) {
         lastPosition.set(camera.position.x, camera.position.y, 0);
         lastZoom = camera.zoom;
         camera.translate(x, y);
         camera.update();
         ensureBounds();
+        camera.zoom /= scale;
         camera.update();
+        ensureZoom();
     }
 
     // Checks if camera is within the boudns.
     public void ensureBounds() {
-        while(camera.frustum.boundsInFrustum(left)) {
-            camera.position.x += 0.1;
-            camera.update();
-        }
-        while(camera.frustum.boundsInFrustum(right)) {
-            camera.position.x -= 0.1;
-            camera.update();
-        }
-        while(camera.frustum.boundsInFrustum(bottom)) {
-            camera.position.y += 0.1;
-            camera.update();
-        }
-        while(camera.frustum.boundsInFrustum(top)) {
-            camera.position.y -= 0.1;
-            camera.update();
-        }
-        while(camera.frustum.boundsInFrustum(left)) {
-            camera.position.x += 0.01;
-            camera.update();
-        }
-        while(camera.frustum.boundsInFrustum(bottom)) {
-            camera.position.y += 0.01;
+        if(camera.frustum.boundsInFrustum(left) || camera.frustum.boundsInFrustum(right)
+                || camera.frustum.boundsInFrustum(bottom) || camera.frustum.boundsInFrustum(top)
+                || camera.frustum.boundsInFrustum(left) || camera.frustum.boundsInFrustum(bottom)) {
+            camera.position.set(lastPosition);
             camera.update();
         }
         checkCamera();
+    }
+
+    void ensureZoom() {
+
+        while(camera.frustum.boundsInFrustum(left)) {
+            camera.position.x += 0.2;
+            camera.update();
+        }
+        while(camera.frustum.boundsInFrustum(right)) {
+            camera.position.x -= 0.2;
+            camera.update();
+        }
+        while(camera.frustum.boundsInFrustum(bottom)) {
+            camera.position.y += 0.2;
+            camera.update();
+        }
+        while(camera.frustum.boundsInFrustum(top)) {
+            camera.position.y -= 0.2;
+            camera.update();
+        }
+
+        if(camera.frustum.boundsInFrustum(left) || camera.frustum.boundsInFrustum(right)
+                || camera.frustum.boundsInFrustum(bottom) || camera.frustum.boundsInFrustum(top)
+                || camera.frustum.boundsInFrustum(left) || camera.frustum.boundsInFrustum(bottom)) {
+            camera.position.set(firstPosition);
+            camera.update();
+        }
     }
 
 
@@ -99,13 +110,12 @@ public class Zoom {
         double oldDist = (Math.pow(this.x-this.x1,2) + Math.pow(this.y-this.y1,2));
         double newDist = (Math.pow(x-x1,2) + Math.pow(y-y1,2));
         double scale = Math.sqrt(newDist / oldDist);
-        camera.zoom /= scale;
         float xPnew = (x+x1)/2;
         float yPnew = (y+y1)/2;
         float xMoveBy = (xP - xPnew)*camera.zoom;
         float yMoveBy = (yPnew - yP)*camera.zoom;
 
-        translateSafe(xMoveBy, yMoveBy);
+        translateSafe(xMoveBy, yMoveBy, scale);
 
 	/*
 	    if (x > x1) {

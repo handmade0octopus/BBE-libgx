@@ -9,10 +9,11 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 // Settings class let you store, load, save and update main settings of the game.
 public class Settings {
     // Variables for main settings
-    int ballsQuantity, ballsSize, ballsTail, springiness, gravity, forces;
+    int ballsQuantity, ballsSize, ballsTail, springiness, gravity, forces, quality;
     boolean gravitation, ballsForces, reset = false;
     Menu menu; // To control and update after change in values
     Zoom zoom;
+    MainEngine mainEngine;
 
     Preferences prefs; // Preferences stores, saves and loads games settings
 
@@ -20,7 +21,7 @@ public class Settings {
     public static final float MIN_QUANT = 0,
             MAX_QUANT = 500,
             MIN_SIZE = 1,
-            MAX_SIZE = 250,
+            MAX_SIZE = 50,
             MIN_TAIL = 0,
             MAX_TAIL = 100,
             MIN_SPRINGINESS = 0,
@@ -29,6 +30,7 @@ public class Settings {
             MAX_GRAVITY = 200,
             MIN_FORCES = 0,
             MAX_FORCES = 200;
+    public static final int MIN_QUALITY = 18, MAX_QUALITY = 360;
 
 
     // Loads prefs when created.
@@ -57,6 +59,7 @@ public class Settings {
         springiness = prefs.getInteger(SettingsEnum.SPRINGINESS.s);
         gravity = prefs.getInteger(SettingsEnum.GRAVITY.s);
         forces = prefs.getInteger(SettingsEnum.FORCES.s);
+        quality = prefs.getInteger(SettingsEnum.QUALITY.s);
         update();
     }
 
@@ -68,18 +71,21 @@ public class Settings {
         prefs.putInteger(SettingsEnum.SPRINGINESS.s, springiness);
         prefs.putInteger(SettingsEnum.GRAVITY.s, gravity);
         prefs.putInteger(SettingsEnum.FORCES.s, forces);
+        prefs.putInteger(SettingsEnum.QUALITY.s, quality);
         prefs.flush();
     }
 
     // Resets all all values to defaults
     public void resetDefaults() {
         ballsQuantity = 100;
-        ballsSize = 50;
+        ballsSize = 10;
         ballsTail = 10;
         springiness = 100;
         gravity = 0;
         forces = 100;
+        quality = 360;
         save();
+        update();
     }
 
     // Sets menu on or of if necessary.
@@ -118,6 +124,9 @@ public class Settings {
                 break;
             case FORCES:
                 forces = setBallsParam(x, button, bgButton, relative, exact, forces, MIN_FORCES, MAX_FORCES);
+                break;
+            case QUALITY:
+                quality = setBallsParam(x, button, bgButton, relative, exact, quality, MIN_QUALITY, MAX_QUALITY);
                 break;
             case RELOAD: break;
         }
@@ -216,6 +225,11 @@ public class Settings {
                     forces = (int) value;
                     return 0;
                 } else { return forces; }
+            case QUALITY:
+                if(set) {
+                    quality = (int) value;
+                    return 0;
+                } else { return quality; }
             default: return 0;
         }
     }
@@ -229,16 +243,6 @@ public class Settings {
     // Gets variable
     float getVar(TextButton button) {
         return var(SettingsEnum.valueOf(button.getName()), false, 0);
-
-      /*  switch(SettingsEnum.valueOf(button.getName())) {
-            case BALLSQUANTITY: return ballsQuantity;
-            case BALLSSIZE: return ballsSize;
-            case BALLSTAIL: return ballsTail;
-            case SPRINGINESS: return springiness;
-            case GRAVITY: return gravity;
-            case FORCES: return forces;
-            default: return 0;
-        } */
     }
 
     // Sets menu on or off
@@ -256,6 +260,10 @@ public class Settings {
         zoom.reset();
     }
 
+    public void setMainEngine(MainEngine mainEngine) {
+        this.mainEngine = mainEngine;
+    }
+
 
     // Enum with all variables and button names.
     enum SettingsEnum {
@@ -267,6 +275,7 @@ public class Settings {
         GRAVITY("GRAVITY %"),
         FORCES("FORCES %"),
         RELOAD("RELOAD"),
+        QUALITY("QUALITY"),
         BLACKS("  "),
         PREFS("GAMEPREFS");
 

@@ -27,7 +27,7 @@ public class Menu {
     TextButton.TextButtonStyle textButtonStyle, textButtonStyleBg; // Style for textbutton and background
     Settings settings; // Main setting object
     SlidingMenu slidingMenu; // Sliding menu - only carried to call setMenu() on or off
-
+    TextButton blackBg;
 
     int numberOfItems = 0; // this variable calculates height for next button.
 
@@ -58,7 +58,7 @@ public class Menu {
         setStyle();
 
         // Adds black screen and "Menu" button to stage.
-        stage.addActor(newBlackScreen("BLACKS"));
+        stage.addActor(blackBg = newBlackScreen("BLACKS"));
         stage.addActor(menuButton);
 
 
@@ -70,8 +70,15 @@ public class Menu {
         addSlider("SPRINGINESS");
         addSlider("GRAVITY");
         addSlider("FORCES");
+        addSlider("QUALITY");
         addButton("RELOAD");
 
+        float lastY = stageEntry.get(stageEntry.size - 1).getY();
+        float topYh = stageEntry.get(2).getY() + stageEntry.get(2).getHeight();
+        float diff = (topYh + lastY - stage.getHeight())/2;
+        for (int i = 2; i < stageEntry.size; i++) {
+            stageEntry.get(i).moveBy(0, -diff);
+        }
 
         // Fade outs whole menu and update their values.
         fadeOut(0f);
@@ -293,6 +300,9 @@ public class Menu {
         for (int i = 2; i < stageEntry.size; i++) {
             stageEntry.get(i).moveBy(0, diff);
         }
+        stageEntry.get(0).moveBy(0, diff);
+        blackBg.setHeight(stage.getViewport().getWorldHeight());
+        blackBg.setPosition(0, 0);
         topY = 0.95f * stage.getHeight();
     }
 
