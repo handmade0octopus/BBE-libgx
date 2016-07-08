@@ -12,7 +12,7 @@ import org.jblas.Geometry;
 import java.util.Random;
 
 public class Ball {
-    // Position, size and speed of ball
+    // Position, size and speed of ball//
     public float radius, mass, x, y, speedX, speedY, xMin, xMax, yMin, yMax;
     public float gravity = 0, force = 0, springiness = 1;
     public int quality = Settings.MAX_QUALITY;
