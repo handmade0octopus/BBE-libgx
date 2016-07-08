@@ -21,11 +21,9 @@ public class Ball {
     Random rnd = new Random();
     Color clr;
 
-    int test = 0;
-
     // Tail
     int tail = 0;
-    static int TAIL_QUALITY = 1;
+    static int TAIL_QUALITY = 4;
     Array<Position> lastPosition = new Array<Position>();
 
     // Main constructor
@@ -132,11 +130,7 @@ public class Ball {
 
     // Moves ball
     public void move() {
-        if (test >= 20) {
-            saveTail();
-            test = 0;
-        }
-        test++;
+        saveTail();
         x += speedX;
         y += speedY;
     }
@@ -145,11 +139,11 @@ public class Ball {
     private void saveTail() {
         if (tail > 0) {
             float tailQ = TAIL_QUALITY;
-            for(int i = TAIL_QUALITY; i < tail*TAIL_QUALITY; i++) {
+            for(int i = tail*TAIL_QUALITY-1; i >= TAIL_QUALITY; i--) {
                 lastPosition.get(i).set(lastPosition.get(i-TAIL_QUALITY));
             }
             for(int i = 0; i < TAIL_QUALITY; i++) {
-                lastPosition.get(i).set(x-(i*speedX/tailQ), y-(i*speedY/tailQ));
+                lastPosition.get(i).set((float) (x-(i*speedX/(tailQ))), (float) (y-(i*speedY/(tailQ))));
             }
         }
     }
@@ -298,7 +292,7 @@ public class Ball {
         this.tail = tail;
         lastPosition.setSize(tail*TAIL_QUALITY);
         for(int i = 0; i < tail*TAIL_QUALITY; i++) {
-            lastPosition.set(i, new Position(0, 0));
+            lastPosition.set(i, new Position(-100, -100));
         }
     }
 
