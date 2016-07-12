@@ -1,19 +1,24 @@
-package com.handmadeoctopus.environment;
+package com.handmadeoctopus.Engine;
 
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.handmadeoctopus.entities.Box;
+import com.handmadeoctopus.environment.Menu;
+import com.handmadeoctopus.environment.Zoom;
 
 
 // Settings class let you store, load, save and update main settings of the game.
 public class Settings {
     // Variables for main settings
-    int ballsQuantity, ballsSize, ballsTail, springiness, gravity, forces, speed;
-    boolean gravitation, ballsForces, reset = false;
+    public int ballsQuantity, ballsSize, ballsTail, springiness, gravity, forces, speed;
+    public boolean gravitation, ballsForces, reset = false;
     Menu menu; // To control and update after change in values
-    Zoom zoom;
+    public Zoom zoom;
     MainEngine mainEngine;
+    public Box box;
+    public Age age;
 
     Preferences prefs; // Preferences stores, saves and loads games settings
 
@@ -25,13 +30,13 @@ public class Settings {
             MIN_TAIL = 0,
             MAX_TAIL = 100,
             MIN_SPRINGINESS = 0,
-            MAX_SPRINGINESS = 200,
+            MAX_SPRINGINESS = 110,
             MIN_GRAVITY = -50,
             MAX_GRAVITY = 50,
             MIN_FORCES = -200,
             MAX_FORCES = 200,
-            MIN_SPEED = 10,
-            MAX_SPEED = 1000;
+            MIN_SPEED = 0,
+            MAX_SPEED = 5;
 
 
     // Loads prefs when created.
@@ -74,6 +79,8 @@ public class Settings {
         prefs.putInteger(SettingsEnum.FORCES.s, forces);
         prefs.putInteger(SettingsEnum.SPEED.s, speed);
         prefs.flush();
+
+//        age.writer.close();
     }
 
     // Resets all all values to defaults
@@ -84,7 +91,7 @@ public class Settings {
         springiness = 100;
         gravity = 0;
         forces = 0;
-        speed = 600;
+        speed = 1;
         save();
         update();
     }
@@ -245,13 +252,13 @@ public class Settings {
     }
 
     // Sets variable
-    void setVar(TextButton button, float value){
+    public void setVar(TextButton button, float value){
         var(SettingsEnum.valueOf(button.getName()), true, value);
         update();
     }
 
     // Gets variable
-    float getVar(TextButton button) {
+    public float getVar(TextButton button) {
         return var(SettingsEnum.valueOf(button.getName()), false, 0);
     }
 
@@ -274,9 +281,17 @@ public class Settings {
         this.mainEngine = mainEngine;
     }
 
+    public void setBox(Box box) {
+        this.box = box;
+    }
+
+    public void setAge(Age age) {
+        this.age = age;
+    }
+
 
     // Enum with all variables and button names.
-    enum SettingsEnum {
+    public enum SettingsEnum {
         RESET("RESET"),
         BALLSQUANTITY("BALLS' QUANTITY"),
         BALLSSIZE("BALLS' SIZE"),
@@ -289,7 +304,7 @@ public class Settings {
         BLACKS("  "),
         PREFS("GAMEPREFS");
 
-        String s;
+        public String s;
 
         SettingsEnum(String s) {
             this.s = s;

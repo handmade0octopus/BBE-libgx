@@ -1,8 +1,7 @@
 package com.handmadeoctopus;
 
 import com.badlogic.gdx.Game;
-import com.badlogic.gdx.Gdx;
-import com.handmadeoctopus.environment.MainScreen;
+import com.handmadeoctopus.Engine.MainScreen;
 
 /*
 Main class which starts MainScreen class.

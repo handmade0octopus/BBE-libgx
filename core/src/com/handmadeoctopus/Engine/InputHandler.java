@@ -1,4 +1,4 @@
-package com.handmadeoctopus.environment;
+package com.handmadeoctopus.Engine;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
@@ -6,6 +6,8 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.handmadeoctopus.BouncingBallEngine;
+import com.handmadeoctopus.environment.SlidingMenu;
+import com.handmadeoctopus.environment.Zoom;
 
 // Main class handling all inputs
 public class InputHandler implements InputProcessor {
@@ -93,12 +95,14 @@ public class InputHandler implements InputProcessor {
     @Override
     public boolean touchDragged(int screenX, int screenY, int pointer) {
         // Dragged only when botch fingers are down.
+        x = camera.unproject(new Vector3(Gdx.input.getX(0), Gdx.input.getY(0), 0)).x;
+        y = camera.unproject(new Vector3(Gdx.input.getX(0), Gdx.input.getY(0), 0)).y;
         x1 = camera.unproject(new Vector3(Gdx.input.getX(1), Gdx.input.getY(1), 0)).x;
         y1 = camera.unproject(new Vector3(Gdx.input.getX(1), Gdx.input.getY(1), 0)).y;
         if (Gdx.input.isTouched(0) && Gdx.input.isTouched(1) && settings.mainEngine.newBall == null) {
             zoom.dragged(Gdx.input.getX(0), Gdx.input.getY(0), Gdx.input.getX(1), Gdx.input.getY(1));
-        } else if (settings.mainEngine.newBall != null && Gdx.input.isTouched(0) && Gdx.input.isTouched(1)) {
-            settings.mainEngine.newBall.setPosition(x1,y1);
+        } else if (settings.mainEngine.newBall != null && Gdx.input.isTouched(0)) {
+            settings.mainEngine.newBall.setSpeedByPosition(x,y);
         }
         return false;
     }
@@ -113,12 +117,7 @@ public class InputHandler implements InputProcessor {
     @Override
     public boolean scrolled(int amount) {
         // When mouse middle button is scrolled.
-        if(settings.mainEngine.newBall == null) {
-            camera.zoom *= (10f+amount)/10f;
-            zoom.checkCamera();
-            camera.update();
-        }
-
+        zoom.scrolled(amount, settings.mainEngine.newBall == null);
         return false;
     }
 
@@ -133,7 +132,12 @@ public class InputHandler implements InputProcessor {
         float w = width;
         float h = height;
         float f = (h / w);
-        zoom.setWorldBounds(0, 0, BouncingBallEngine.WIDTH, (BouncingBallEngine.WIDTH*f));
+        int x = (int) (-BouncingBallEngine.WIDTH*3);
+        int y = (int) (-BouncingBallEngine.WIDTH*f*3);
+        int wi = (int) (BouncingBallEngine.WIDTH*6.5);
+        int he = (int) (BouncingBallEngine.WIDTH*f*6.5);
+        zoom.setWorldBounds(x, y, wi, he);
+        settings.box.set(x, y, wi, he);
     }
 
     public void updateMenu() {

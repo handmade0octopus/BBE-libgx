@@ -1,14 +1,14 @@
 package com.handmadeoctopus.environment;
 
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
-import com.handmadeoctopus.entities.Box;
 
 // Zoom class handles all zoom instances
 public class Zoom {
-    OrthographicCamera camera, uiCamera;
+    public OrthographicCamera camera, uiCamera;
     boolean zooming = false;
 
     // Mix and max zoom
@@ -57,8 +57,7 @@ public class Zoom {
         checkCamera();
     }
 
-    void ensureZoom() {
-
+    public void ensureZoom() {
         while(camera.frustum.boundsInFrustum(left)) {
             camera.position.x += 0.2;
             camera.update();
@@ -80,6 +79,8 @@ public class Zoom {
                 || camera.frustum.boundsInFrustum(bottom) || camera.frustum.boundsInFrustum(top)
                 || camera.frustum.boundsInFrustum(left) || camera.frustum.boundsInFrustum(bottom)) {
             camera.position.set(firstPosition);
+            camera.zoom *= 0.99;
+            ensureZoom();
             camera.update();
         }
     }
@@ -168,9 +169,10 @@ public class Zoom {
 
 
     // Checks if camera zoom is within set borders.
-    void checkCamera() {
-        if (camera.zoom > MIN_ZOOM) { camera.zoom = MIN_ZOOM; }
+    public void checkCamera() {
+      /*  if (camera.zoom > MIN_ZOOM) { camera.zoom = MIN_ZOOM; }
         else if (camera.zoom < MAX_ZOOM) { camera.zoom = MAX_ZOOM; }
+        camera.update();*/
     }
 
     // Called when you want to move camera x, y is position of first and x1, y1 of second finger
@@ -186,5 +188,26 @@ public class Zoom {
         camera.position.set(camera.viewportWidth / 2f, camera.viewportHeight / 2f, 0);
         baseX = 0;
         baseY = 0;
+    }
+
+    public void scrolled(int amount, boolean newBall) {
+        x = camera.unproject(new Vector3(Gdx.input.getX(0), Gdx.input.getY(0), 0)).x;
+        y = camera.unproject(new Vector3(Gdx.input.getX(0), Gdx.input.getY(0), 0)).y;
+        float currentX = camera.position.x;
+        float currentY = camera.position.y;
+        int direction = amount > 0 ? -1 : 1;
+        float moveX = direction*(x - currentX)/10;
+        float moveY = direction*(y - currentY)/10;
+
+        if(true) {
+            camera.zoom *= (25f+amount)/25f;
+            camera.update();
+            camera.translate(moveX, moveY);
+            camera.update();
+            ensureZoom();
+            checkCamera();
+            camera.update();
+        }
+
     }
 }

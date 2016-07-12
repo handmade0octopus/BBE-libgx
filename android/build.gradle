@@ -120,4 +120,5 @@ idea {
     }
 }
 dependencies {
+    compile 'org.jblas:jblas:1.2.4'
 }

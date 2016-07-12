@@ -13,6 +13,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.DragListener;
 import com.badlogic.gdx.utils.Array;
+import com.handmadeoctopus.Engine.Settings;
 
 /* Class that contains all menu buttons,
 also includes Menu entrance button from SlidingMenu
@@ -330,7 +331,7 @@ public class Menu {
 
     // Fades out menu if called
     public void fadeOut(float time) {
-        for (int i = 2; i < stageEntry.size; i++) {
+        for (int i = 2; i < menuEntry.size+2; i++) {
             stageEntry.get(i).addAction(Actions.fadeOut(time));
         }
         stageEntry.get(0).addAction(Actions.fadeOut(time));
@@ -339,7 +340,7 @@ public class Menu {
 
     // Fades in menu if called
     public void fadeIn(float time) {
-        for (int i = 0; i < stageEntry.size; i++) {
+        for (int i = 0; i < menuEntry.size+2; i++) {
             stageEntry.get(i).addAction(Actions.fadeIn(time));
             if (i > 1) if (menuEntry.get(i-2).getText().toString().equals(" ")) {
                 stageEntry.get(i).addAction(Actions.alpha(0.5f, time));

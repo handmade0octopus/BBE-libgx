@@ -1,4 +1,4 @@
-package com.handmadeoctopus.environment;
+package com.handmadeoctopus.Engine;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
@@ -7,11 +7,11 @@ import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Image;
 
 import com.badlogic.gdx.utils.viewport.*;
 import com.handmadeoctopus.BouncingBallEngine;
 import com.handmadeoctopus.entities.*;
+import com.handmadeoctopus.environment.Zoom;
 
 
 public class MainScreen implements Screen {
@@ -30,6 +30,7 @@ public class MainScreen implements Screen {
 
     Zoom zoom; // Zoom class which helps us handle UI.
 
+
     private InputHandler handler; // Our input handler, handles all actions.
 
     private MainEngine mainEngine; // Main engine of the game.
@@ -41,7 +42,7 @@ public class MainScreen implements Screen {
     public MainScreen(Game game) {
         this.game = game;
 
-        // We calculate here height from height/width ratio.
+        // We calculateAll here height from height/width ratio.
         width = BouncingBallEngine.WIDTH;
         float w = Gdx.graphics.getWidth();
         float h = Gdx.graphics.getHeight();

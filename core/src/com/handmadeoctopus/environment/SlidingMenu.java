@@ -11,6 +11,8 @@ import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.handmadeoctopus.BouncingBallEngine;
+import com.handmadeoctopus.Engine.InputHandler;
+import com.handmadeoctopus.Engine.Settings;
 
 public class SlidingMenu {
         Stage stage; // Main stage of our menu
@@ -20,10 +22,13 @@ public class SlidingMenu {
         InputHandler handler; // Input handler where all input is handled, passed from main class.
         Settings settings; // All settings of the game, passed from main class.
         Menu menu; // Main menu of
+        Label calculatedYear, currentYear;
 
         int inter = 0; // Variable for fading window.
-        boolean visible = false, menuOn = false; //  variables to controll menu visibility
-        float z, q; // additional variable of screen size
+        public boolean visible = false;
+        boolean menuOn = false; //  variables to controll menu visibility
+        public float z;
+        public float q; // additional variable of screen size
 
 
         public SlidingMenu(final Stage stage, final InputHandler handler, Settings settings) {
@@ -58,6 +63,10 @@ public class SlidingMenu {
                 textButtonStyle.font = skin.getFont("default");
                 skin.add("default", textButtonStyle);
 
+                Label.LabelStyle labelStyle = new Label.LabelStyle();
+                labelStyle.font = skin.getFont("default");
+                skin.add("default", labelStyle);
+
                 // Create a button with the "default" TextButtonStyle. A 3rd parameter can be used to specify a name other than "default".
                 menuButton =new TextButton("MENU",textButtonStyle);
                 menuButton.setWidth(stage.getViewport().getWorldWidth()*0.10f);
@@ -65,8 +74,14 @@ public class SlidingMenu {
                 menuButton.setPosition(stage.getWidth()- menuButton.getWidth(), stage.getHeight()- menuButton.getHeight());
 
 
+                calculatedYear = new Label(" ", skin);
+                currentYear = new Label(" ", skin);
+
                 // Setting up menu
                 menu = new Menu(stage, skin, settings, menuButton, this);
+
+                calculatedYear.setPosition(menuButton.getX() - menuButton.getWidth(), menuButton.getY());
+                currentYear.setPosition(menuButton.getX() - menuButton.getWidth(), menuButton.getY() + currentYear.getHeight());
 
                 // Adding listener to "Menu" button which hides menu if clicked.
 
@@ -77,16 +92,22 @@ public class SlidingMenu {
                                 return true;
                         }
                 });
+                stage.addActor(currentYear);
+                stage.addActor(calculatedYear);
         }
 
         public void draw() {
                 // Make actions and draws stage.
+                currentYear.setText("Year: " + settings.age.currentYear.getYear());
+                 calculatedYear.setText("FPS: " + (int) (1/Gdx.graphics.getDeltaTime()));
+
+                //calculatedYear.setText("Bufor: " + settings.age.calculatedYear());
                 stage.act(Math.min(Gdx.graphics.getDeltaTime(), 1/30f));
                 stage.draw();
 
                 // If menu is clicked, adds 'inter' timer on. If inter is >= 100, menu fades out.
                 if (visible && !menuOn) { inter++; }
-                if (inter >= 100) {
+                if (inter >= 100 && !menuOn) {
                         menu.fadeOut(0.5f);
                         visible = false;
                         inter = 0;
@@ -98,6 +119,7 @@ public class SlidingMenu {
                 if (on) {
                         Gdx.input.setInputProcessor(stage);
                         menuOn = true;
+                        visible = true;
                         inter = 0;
                 } else {
                         Gdx.input.setInputProcessor(handler);

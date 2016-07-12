@@ -7,4 +7,5 @@ eclipse.project {
 }
 dependencies {
     compile 'org.jblas:jblas:1.2.4'
+    compile files('build/libs/jblas-1.2.4.jar')
 }
