@@ -25,14 +25,40 @@ public class HistoryEntry {
         return balls;
     }
 
-    public void resetYear() {
+    void resetYear() {
         nextYear = BigInteger.ZERO;
     }
 
-    public void addYear(int e) {
+    void addYear(int e) {
         synchronized(nextYear) {
             year = nextYear;
             nextYear = nextYear.add(BigInteger.valueOf(e));
         }
+    }
+
+    // Gets new year
+    static HistoryEntry getNewYear(int size, Settings settings) {
+        Array<Ball> newYear = new Array<Ball>();
+        newYear.setSize(size);
+        for(int i = 0; i < size; i++) {
+            newYear.set(i, newRandomBall(settings));
+        }
+        return new HistoryEntry(newYear);
+    }
+
+    // Creates random new ball
+    static Ball newRandomBall(Settings settings) {
+        Ball ball = new Ball(settings);
+        return ball;
+    }
+
+    // Clones Array<Ball> to creates new list with new balls
+    public static Array<Ball> clone(Array<Ball> yearToCopy) {
+        Array<Ball> newYear = new Array<Ball>();
+        newYear.setSize(yearToCopy.size);
+        for(int i = 0; i < yearToCopy.size; i++) {
+            newYear.set(i, new Ball(yearToCopy.get(i)));
+        }
+        return newYear;
     }
 }

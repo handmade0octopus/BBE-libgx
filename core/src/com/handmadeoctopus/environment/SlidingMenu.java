@@ -98,7 +98,7 @@ public class SlidingMenu {
 
         public void draw() {
                 // Make actions and draws stage.
-                currentYear.setText("Year: " + settings.age.currentYear.getYear());
+                currentYear.setText("Year: " + settings.age.drawYear.getYear());
                  calculatedYear.setText("FPS: " + (int) (1/Gdx.graphics.getDeltaTime()));
 
                 //calculatedYear.setText("Bufor: " + settings.age.calculatedYear());

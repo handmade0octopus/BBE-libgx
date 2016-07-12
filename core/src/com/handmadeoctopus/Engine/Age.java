@@ -19,7 +19,7 @@ public class Age {
 
     public int buffer = 300;
     private int year, calculatedYear, difference, fps;
-    public HistoryEntry currentYear;
+    public HistoryEntry drawYear;
     private Array<Ball> newYear, balls;
     private LinkedList<HistoryEntry> history;
     private boolean sameFrame = false;
@@ -55,19 +55,13 @@ public class Age {
     public void reload() {
         year = 0;
         calculatedYear = 0;
-        if (currentYear != null) { currentYear.resetYear(); }
+        if (drawYear != null) { drawYear.resetYear(); }
         flush();
-        currentYear = getNewYear();
-        currentYear.resetYear();
-        history.add(year, currentYear);
+        drawYear = HistoryEntry.getNewYear(settings.ballsQuantity, settings);
+        drawYear.resetYear();
+        history.add(year, drawYear);
         difference = buffer - (calculatedYear - year);
         calculateThread.submit(run);
-    }
-
-    // Creates random new ball
-    private Ball newRandomBall() {
-        Ball ball = new Ball(settings);
-        return ball;
     }
 
     // Updates balls parameters
@@ -77,11 +71,11 @@ public class Age {
                 int diff = settings.ballsQuantity - mainEngine.ballsQuantity;
                 if(diff > 0) {
                     for(int i = 0; i < diff; i++) {
-                        currentYear.getBalls().add(newRandomBall());
+                        drawYear.getBalls().add(HistoryEntry.newRandomBall(settings));
                     }
                     flush();
                 } else if (diff < 0) {
-                    currentYear.getBalls().setSize(settings.ballsQuantity);
+                    drawYear.getBalls().setSize(settings.ballsQuantity);
                     flush();
                 }
                 break;
@@ -90,7 +84,7 @@ public class Age {
                     float newSize = settings.ballsSize;
                     float oldSize = mainEngine.ballsSize;
                     float changeSize = newSize/oldSize;
-                    for(Ball ball : currentYear.getBalls()) {
+                    for(Ball ball : drawYear.getBalls()) {
                         ball.radius *= changeSize;
                         ball.updateMass();
                     }
@@ -100,7 +94,7 @@ public class Age {
                 break;
             case BALLSTAIL:
                 if(settings.ballsTail != mainEngine.ballsTail) {
-                    for(Ball ball : currentYear.getBalls()) {
+                    for(Ball ball : drawYear.getBalls()) {
                         ball.tail = (settings.ballsTail);
                     }
                     flush();
@@ -108,7 +102,7 @@ public class Age {
                 break;
             case SPRINGINESS:
                 if(settings.springiness != mainEngine.springiness) {
-                    for(Ball ball : currentYear.getBalls()) {
+                    for(Ball ball : drawYear.getBalls()) {
                         ball.springiness = settings.springiness/100f;
                         flush();
                     }
@@ -116,7 +110,7 @@ public class Age {
                 break;
             case GRAVITY:
                 if(settings.gravity != mainEngine.gravity) {
-                    for(Ball ball : currentYear.getBalls()) {
+                    for(Ball ball : drawYear.getBalls()) {
                         ball.gravity = settings.gravity/1000f;
                         ball.gravitation = settings.gravitation;
                     }
@@ -125,7 +119,7 @@ public class Age {
                 break;
             case FORCES:
                 if(settings.forces != mainEngine.forces) {
-                    for(Ball ball : currentYear.getBalls()) {
+                    for(Ball ball : drawYear.getBalls()) {
                         ball.force = settings.forces/10000f;
                         ball.forces = settings.ballsForces;
                     }
@@ -152,8 +146,8 @@ public class Age {
             e.printStackTrace();
         }
 
-   //     writer.println(currentYear.getYear());
-        balls = currentYear.getBalls();
+   //     writer.println(drawYear.getYear());
+        balls = drawYear.getBalls();
         for (int i = 0; i < balls.size; i++) {
             if (year > 1 && settings.ballsTail > 0) {
                 balls.get(i).drawTail(batch, history.subList(0, year - 1), i);
@@ -174,7 +168,7 @@ public class Age {
     // Adjust buffer if too big or too small
     private void adjustBuffer() {
         float deltaTime = Gdx.graphics.getDeltaTime();
-        if (deltaTime > 0.025f && buffer > Math.min(50, 2500f/(currentYear.getBalls().size))) {
+        if (deltaTime > 0.025f && buffer > Math.min(50, 2500f/(drawYear.getBalls().size))) {
             if(deltaTime > 0.05f) {
                 buffer -= buffer /10;
             } else {
@@ -184,12 +178,12 @@ public class Age {
                 calculatedYear = year+ buffer;
                 history.subList(calculatedYear+1, history.size()).clear();
             }
-        } else if (deltaTime < 0.02f && buffer < Math.min(2000, (25000f/(currentYear.getBalls().size)))) {
+        } else if (deltaTime < 0.02f && buffer < Math.min(2000, (25000f/(drawYear.getBalls().size)))) {
             buffer += 1;
         }
     }
 
-    // Adds i years to calculate and load currentYear
+    // Adds i years to calculate and load drawYear
     private void addYear(int i) {
         try {
             sem.acquire();
@@ -204,10 +198,10 @@ public class Age {
 
         if (year >= calculatedYear) {
             year = calculatedYear;
-            currentYear = history.get(year);
+            drawYear = history.get(year);
         } else if (year < calculatedYear) {
-            currentYear = history.get(year);
-            currentYear.addYear(e);
+            drawYear = history.get(year);
+            drawYear.addYear(e);
         }
 
 
@@ -222,7 +216,7 @@ public class Age {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        newYear = clone(history.get(calculatedYear).getBalls());
+        newYear = HistoryEntry.clone(history.get(calculatedYear).getBalls());
 
         for (int i = 0; i < newYear.size; i++) {
             if (newYear.size == 1) { newYear.get(0).act(null); }
@@ -302,26 +296,6 @@ public class Age {
         }
     }
 
-    // Clones Array<Ball> to creates new list with new balls
-    private Array<Ball> clone(Array<Ball> yearToCopy) {
-        Array<Ball> newYear = new Array<Ball>();
-        newYear.setSize(yearToCopy.size);
-        for(int i = 0; i < yearToCopy.size; i++) {
-            newYear.set(i, new Ball(yearToCopy.get(i)));
-        }
-        return newYear;
-    }
-
-    // Gets new Array<Ball> of year
-    public HistoryEntry getNewYear() {
-        Array<Ball> newYear = new Array<Ball>();
-        newYear.setSize(settings.ballsQuantity);
-        for(int i = 0; i < settings.ballsQuantity; i++) {
-            newYear.set(i, newRandomBall());
-        }
-        return new HistoryEntry(newYear);
-    }
-
     // Adds ball to the current year
     public void addBall(Ball ball) {
         try {
@@ -329,25 +303,25 @@ public class Age {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        currentYear.getBalls().add(ball);
+        drawYear.getBalls().add(ball);
         settings.ballsQuantity++;
         sem.release();
         flush();
     }
 
-    // Removes ball from currentYear
+    // Removes ball from drawYear
     public void removeBall(Ball ball) {
         try {
             sem.acquire();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        currentYear.getBalls().removeValue(ball, true);
+        drawYear.getBalls().removeValue(ball, true);
         sem.release();
         flush();
     }
 
-    // Recalculates years from currentYear starting
+    // Recalculates years from drawYear starting
     public void flush() {
         try {
             sem.acquire();
@@ -363,7 +337,7 @@ public class Age {
 
     // Action down handled
     public boolean actionDown(float x, float y) {
-        for (Ball ball : currentYear.getBalls()) {
+        for (Ball ball : drawYear.getBalls()) {
             if (mainEngine.newBall == null) {
                 mainEngine.newBall = ball.clicked(x, y);
                 if (mainEngine.newBall != null) {
@@ -402,7 +376,7 @@ public class Age {
         mainEngine.handlingBall = false;
     }
 
-    // Returns currentYear
+    // Returns drawYear
     public int currentYear() {
         return year;
     }
