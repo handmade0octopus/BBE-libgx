@@ -1,6 +1,7 @@
 package com.handmadeoctopus.Engine;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Vector3;
@@ -16,7 +17,8 @@ public class InputHandler implements InputProcessor {
     Zoom zoom; // Zoom object which helps us control cameras.
     SlidingMenu slidingMenu; // SlidingMenu which also calls our actions.
     Settings settings; // Main settings of the game which this class changes directly from user input.
-    float x, y, x1, y1; // Variables to control input.
+    float x, y, x1, y1, w, h, f; // Variables to control input.
+    int lastSpeed = 1;
 
 
     public InputHandler(OrthographicCamera camera, OrthographicCamera uiCamera, Zoom zoom, Stage stage, Settings settings) {
@@ -30,6 +32,14 @@ public class InputHandler implements InputProcessor {
 
     @Override
     public boolean keyDown(int keycode) {
+        if (keycode == Input.Keys.SPACE && settings.speed == 0) {
+            settings.speed = lastSpeed;
+            if (settings.menu != null) { settings.menu.updateValues(); }
+        } else if (keycode == Input.Keys.SPACE) {
+            lastSpeed = Math.max(1, settings.speed);
+            settings.speed = 0;
+            if (settings.menu != null) { settings.menu.updateValues(); }
+        }
         return false;
     }
 
@@ -107,8 +117,6 @@ public class InputHandler implements InputProcessor {
         return false;
     }
 
-
-
     @Override
     public boolean mouseMoved(int screenX, int screenY) {
         return false;
@@ -129,15 +137,14 @@ public class InputHandler implements InputProcessor {
     public void update(float width, float height) {
         // Updates menu if change size
         slidingMenu.update(width, height);
-        float w = width;
-        float h = height;
-        float f = (h / w);
-        int x = (int) (-BouncingBallEngine.WIDTH*3);
-        int y = (int) (-BouncingBallEngine.WIDTH*f*3);
-        int wi = (int) (BouncingBallEngine.WIDTH*6.5);
-        int he = (int) (BouncingBallEngine.WIDTH*f*6.5);
-        zoom.setWorldBounds(x, y, wi, he);
-        settings.box.set(x, y, wi, he);
+        w = width;
+        h = height;
+        f = (h / w);
+        settings.setUniScale(f);
+    }
+
+    public void update() {
+        update(w,h);
     }
 
     public void updateMenu() {

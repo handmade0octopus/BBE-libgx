@@ -4,6 +4,7 @@ package com.handmadeoctopus.Engine;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.handmadeoctopus.BouncingBallEngine;
 import com.handmadeoctopus.entities.Box;
 import com.handmadeoctopus.environment.Menu;
 import com.handmadeoctopus.environment.Zoom;
@@ -12,8 +13,9 @@ import com.handmadeoctopus.environment.Zoom;
 // Settings class let you store, load, save and update main settings of the game.
 public class Settings {
     // Variables for main settings
-    public int ballsQuantity, ballsSize, ballsTail, springiness, gravity, forces, speed;
+    public int ballsQuantity, ballsSize, ballsTail, springiness, gravity, forces, speed, universeScale;
     public boolean gravitation, ballsForces, reset = false;
+    float f;
     Menu menu; // To control and update after change in values
     public Zoom zoom;
     MainEngine mainEngine;
@@ -36,23 +38,29 @@ public class Settings {
             MIN_FORCES = -200,
             MAX_FORCES = 200,
             MIN_SPEED = 0,
-            MAX_SPEED = 5;
+            MAX_SPEED = 5,
+            MIN_UNI = 1,
+            MAX_UNI = 1000;
 
 
     // Loads prefs when created.
     public Settings() {
         prefs = Gdx.app.getPreferences(SettingsEnum.PREFS.s);
         load();
+        if (!prefs.getBoolean("SET")) {
+            resetDefaults();
+        }
     }
 
     // Sets all values if necessary.
-    public void set(int ballsQuantity, int ballsSize, int ballsTail, int springiness, int gravity, int forces) {
+    public void set(int ballsQuantity, int ballsSize, int ballsTail, int springiness, int gravity, int forces, int universeScale) {
         this.ballsQuantity = ballsQuantity;
         this.ballsSize = ballsSize;
         this.ballsTail = ballsTail;
         this.springiness = springiness;
         this.gravity = gravity;
         this.forces = forces;
+        this.universeScale = universeScale;
         save();
         update();
     }
@@ -66,6 +74,7 @@ public class Settings {
         gravity = prefs.getInteger(SettingsEnum.GRAVITY.s);
         forces = prefs.getInteger(SettingsEnum.FORCES.s);
         speed = prefs.getInteger(SettingsEnum.SPEED.s);
+        universeScale = prefs.getInteger(SettingsEnum.UNISCALE.s);
         update();
     }
 
@@ -78,6 +87,8 @@ public class Settings {
         prefs.putInteger(SettingsEnum.GRAVITY.s, gravity);
         prefs.putInteger(SettingsEnum.FORCES.s, forces);
         prefs.putInteger(SettingsEnum.SPEED.s, speed);
+        prefs.putInteger(SettingsEnum.UNISCALE.s, universeScale);
+        prefs.putBoolean("SET", true);
         prefs.flush();
 
 //        age.writer.close();
@@ -92,6 +103,7 @@ public class Settings {
         gravity = 0;
         forces = 0;
         speed = 1;
+        universeScale = 10;
         save();
         update();
     }
@@ -140,6 +152,9 @@ public class Settings {
                 break;
             case SPEED:
                 speed = setBallsParam(x, button, bgButton, relative, exact, speed, MIN_SPEED, MAX_SPEED);
+                break;
+            case UNISCALE:
+                universeScale = setBallsParam(x, button, bgButton, relative, exact, universeScale, MIN_UNI, MAX_UNI);
                 break;
             case RELOAD:
                 if(mainEngine != null) { mainEngine.reload(); }
@@ -247,6 +262,11 @@ public class Settings {
                     speed = (int) value;
                     return 0;
                 } else { return speed; }
+            case UNISCALE:
+                if(set) {
+                    universeScale = (int) value;
+                    return 0;
+                } else { return universeScale; }
             default: return 0;
         }
     }
@@ -289,6 +309,20 @@ public class Settings {
         this.age = age;
     }
 
+    public void setUniScale(float f) {
+        this.f = f;
+        int x = (int) (-BouncingBallEngine.WIDTH*universeScale);
+        int y = (int) (-BouncingBallEngine.WIDTH*f*universeScale);
+        int wi = (int) (BouncingBallEngine.WIDTH*universeScale*2 + BouncingBallEngine.WIDTH/2);
+        int he = (int) (BouncingBallEngine.WIDTH*f*universeScale*2 + BouncingBallEngine.WIDTH/2);
+        zoom.setWorldBounds(x, y, wi, he);
+        box.set(x, y, x, wi, he, wi);
+    }
+
+    public void setUniScale() {
+        setUniScale(f);
+    }
+
 
     // Enum with all variables and button names.
     public enum SettingsEnum {
@@ -301,6 +335,7 @@ public class Settings {
         FORCES("FORCES %"),
         RELOAD("RELOAD"),
         SPEED("SPEED"),
+        UNISCALE("SCALE OF UNIVERSE"),
         BLACKS("  "),
         PREFS("GAMEPREFS");
 

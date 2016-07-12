@@ -10,7 +10,7 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 
 public class Box {
     // Size of box.
-    float xMin, xMax, yMin, yMax, width, height;
+    float xMin, xMax, yMin, yMax, width, height, zMin, zMax, depth;
 
     // Sets box by width and height
     public Box(float width, float height) {
@@ -18,14 +18,18 @@ public class Box {
         this.height = height;
     }
 
+
+
     // Sets box size, called when change size
-    public void set(int x, int y, float width, float height) {
+    public void set(int x, int y, int z, float width, float height, float depth) {
         this.width = width;
         this.height = height;
         xMin = x;
         xMax = x + width;
         yMin = y;
         yMax = y + height;
+        zMin = z;
+        zMax = z + depth;
     }
 
     // Draws box on screen

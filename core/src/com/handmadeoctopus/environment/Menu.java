@@ -72,6 +72,7 @@ public class Menu {
         addSlider("GRAVITY");
         addSlider("FORCES");
         addSlider("SPEED");
+        addSlider("UNISCALE");
         addButton("RELOAD");
 
         float lastY = stageEntry.get(stageEntry.size - 1).getY();
@@ -277,7 +278,7 @@ public class Menu {
                 movedBy = 0;
             }
 
-            for (int i = 2; i < stageEntry.size; i++) {
+            for (int i = 2; i < stageEntry.size-2; i++) {
                 stageEntry.get(i).addAction(Actions.moveBy(0, newY, 0));
             }
             startY = y;
@@ -306,7 +307,6 @@ public class Menu {
         blackBg.setPosition(0, 0);
         topY = 0.95f * stage.getHeight();
     }
-
 
     // Updates menu values.
     public void updateValues() {

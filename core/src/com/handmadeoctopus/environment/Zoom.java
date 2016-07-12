@@ -12,23 +12,41 @@ public class Zoom {
     boolean zooming = false;
 
     // Mix and max zoom
-    static final float MIN_ZOOM = 1f, MAX_ZOOM = 0.01f;
+    static final float MIN_ZOOM = 0.01f, MAX_ZOOM = 1f;
 
     // Variables for calculating zoom
-    public float x, y, x1, y1, xP, yP, baseX = 0, baseY = 0, baseRotation = 0, z, q;
+    public float x, y, x1, y1, xP, yP, baseX = 0, baseY = 0, baseRotation = 0, z, q, maxZoom = 100;
 
     BoundingBox left, right, top, bottom = null;
 
-    // Function set world bounds for ensuring our camera won't leave boundries
+    // Function set world bounds for ensuring our camera won't leave boundaries
     public void setWorldBounds(int left, int bottom, float width, float height) {
         float top = bottom + height;
         float right = left + width;
+
+        reset();
 
         this.left = new BoundingBox(new Vector3(left, 0, 0), new Vector3(left, top, 0));
         this.right = new BoundingBox(new Vector3(right , 0, 0), new Vector3(right , top, 0));
         this.top = new BoundingBox(new Vector3(0, top, 0), new Vector3(right, top , 0));
         this.bottom = new BoundingBox(new Vector3(0, bottom, 0), new Vector3(right, bottom, 0));
+        camera.position.set((bottom+top)/2f, (left+right)/2f, 0);
+        camera.update();
         firstPosition.set(camera.position.x, camera.position.y, 0);
+
+        setMaxZoom();
+    }
+
+
+    private void setMaxZoom() {
+        while (!(camera.frustum.boundsInFrustum(left) || camera.frustum.boundsInFrustum(right)
+                || camera.frustum.boundsInFrustum(bottom) || camera.frustum.boundsInFrustum(top)
+                || camera.frustum.boundsInFrustum(left) || camera.frustum.boundsInFrustum(bottom))) {
+            camera.zoom += 0.01;
+            camera.update();
+        }
+        maxZoom = camera.zoom;
+        camera.update();
     }
 
     Vector3 lastPosition = new Vector3(), firstPosition = new Vector3();
@@ -51,13 +69,14 @@ public class Zoom {
         if(camera.frustum.boundsInFrustum(left) || camera.frustum.boundsInFrustum(right)
                 || camera.frustum.boundsInFrustum(bottom) || camera.frustum.boundsInFrustum(top)
                 || camera.frustum.boundsInFrustum(left) || camera.frustum.boundsInFrustum(bottom)) {
-            camera.position.set(lastPosition);
+            //camera.position.set(lastPosition);
             camera.update();
         }
         checkCamera();
     }
 
     public void ensureZoom() {
+        checkCamera();
         while(camera.frustum.boundsInFrustum(left)) {
             camera.position.x += 0.2;
             camera.update();
@@ -78,9 +97,7 @@ public class Zoom {
         if(camera.frustum.boundsInFrustum(left) || camera.frustum.boundsInFrustum(right)
                 || camera.frustum.boundsInFrustum(bottom) || camera.frustum.boundsInFrustum(top)
                 || camera.frustum.boundsInFrustum(left) || camera.frustum.boundsInFrustum(bottom)) {
-            camera.position.set(firstPosition);
-            camera.zoom *= 0.99;
-            ensureZoom();
+           // camera.position.set(lastPosition);
             camera.update();
         }
     }
@@ -170,9 +187,9 @@ public class Zoom {
 
     // Checks if camera zoom is within set borders.
     public void checkCamera() {
-      /*  if (camera.zoom > MIN_ZOOM) { camera.zoom = MIN_ZOOM; }
-        else if (camera.zoom < MAX_ZOOM) { camera.zoom = MAX_ZOOM; }
-        camera.update();*/
+        if (camera.zoom < MIN_ZOOM) { camera.zoom = MIN_ZOOM; }
+        else if (camera.zoom > maxZoom) { camera.zoom = maxZoom; }
+        camera.update();
     }
 
     // Called when you want to move camera x, y is position of first and x1, y1 of second finger
@@ -181,13 +198,13 @@ public class Zoom {
         setZoom(x, y, x1, y1);
     }
 
-
     // Resets camera to default value
     public void reset() {
         camera.zoom = 1;
         camera.position.set(camera.viewportWidth / 2f, camera.viewportHeight / 2f, 0);
         baseX = 0;
         baseY = 0;
+        camera.update();
     }
 
     public void scrolled(int amount, boolean newBall) {
@@ -200,9 +217,9 @@ public class Zoom {
         float moveY = direction*(y - currentY)/10;
 
         if(true) {
-            camera.zoom *= (25f+amount)/25f;
             camera.update();
-            camera.translate(moveX, moveY);
+            float zoomScaler = Math.max(25, 1/camera.zoom);
+            translateSafe(moveX, moveY, (zoomScaler-amount)/(zoomScaler));
             camera.update();
             ensureZoom();
             checkCamera();

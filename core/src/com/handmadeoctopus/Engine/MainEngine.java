@@ -16,7 +16,7 @@ import com.handmadeoctopus.environment.Zoom;
 
 public class MainEngine {
     Array<Ball> balls = null;
-    int ballsQuantity, ballsSize, ballsTail, springiness, gravity, forces, speed;
+    int ballsQuantity, ballsSize, ballsTail, springiness, gravity, forces, speed, universeScale;
     boolean gravitation, ballsForces;
 
     private Box box;
@@ -64,6 +64,7 @@ public class MainEngine {
         speed = settings.speed;
         gravitation = settings.gravitation;
         ballsForces = settings.ballsForces;
+        universeScale = settings.universeScale;
     }
 
     //Reloads balls

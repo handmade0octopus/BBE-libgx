@@ -11,12 +11,13 @@ import com.handmadeoctopus.entities.Ball;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.concurrent.*;
 
 public class Age {
 
-    public int bufor = 300;
+    public int buffer = 300;
     private int year, calculatedYear, difference, fps;
     public HistoryEntry currentYear;
     private Array<Ball> newYear, balls;
@@ -29,6 +30,7 @@ public class Age {
     Semaphore sem;
     PrintWriter writer;
 
+    // Main constructor
     public Age (Settings settings, MainEngine mainEngine) {
         this.settings = settings;
         this.mainEngine = mainEngine;
@@ -58,7 +60,7 @@ public class Age {
         currentYear = getNewYear();
         currentYear.resetYear();
         history.add(year, currentYear);
-        difference = bufor - (calculatedYear - year);
+        difference = buffer - (calculatedYear - year);
         calculateThread.submit(run);
     }
 
@@ -68,53 +70,77 @@ public class Age {
         return ball;
     }
 
+    // Updates balls parameters
     public boolean updateBalls(Settings.SettingsEnum settingsEnum) {
         switch(settingsEnum) {
             case BALLSQUANTITY:
                 int diff = settings.ballsQuantity - mainEngine.ballsQuantity;
-                if(diff >= 0) {
+                if(diff > 0) {
                     for(int i = 0; i < diff; i++) {
                         currentYear.getBalls().add(newRandomBall());
                     }
-                } else {
+                    flush();
+                } else if (diff < 0) {
                     currentYear.getBalls().setSize(settings.ballsQuantity);
+                    flush();
                 }
                 break;
             case BALLSSIZE:
-                float newSize = settings.ballsSize;
-                float oldSize = mainEngine.ballsSize;
-                float changeSize = newSize/oldSize;
-                for(Ball ball : currentYear.getBalls()) {
-                    ball.radius *= changeSize;
-                    ball.updateMass();
+                if(settings.ballsSize != mainEngine.ballsSize) {
+                    float newSize = settings.ballsSize;
+                    float oldSize = mainEngine.ballsSize;
+                    float changeSize = newSize/oldSize;
+                    for(Ball ball : currentYear.getBalls()) {
+                        ball.radius *= changeSize;
+                        ball.updateMass();
+                    }
+                    flush();
                 }
+
                 break;
             case BALLSTAIL:
-                for(Ball ball : currentYear.getBalls()) {
-                    ball.tail = (settings.ballsTail);
+                if(settings.ballsTail != mainEngine.ballsTail) {
+                    for(Ball ball : currentYear.getBalls()) {
+                        ball.tail = (settings.ballsTail);
+                    }
+                    flush();
                 }
                 break;
             case SPRINGINESS:
-                for(Ball ball : currentYear.getBalls()) {
-                    ball.springiness = settings.springiness/100f;
+                if(settings.springiness != mainEngine.springiness) {
+                    for(Ball ball : currentYear.getBalls()) {
+                        ball.springiness = settings.springiness/100f;
+                        flush();
+                    }
                 }
                 break;
             case GRAVITY:
-                for(Ball ball : currentYear.getBalls()) {
-                    ball.gravity = settings.gravity/1000f;
-                    ball.gravitation = settings.gravitation;
+                if(settings.gravity != mainEngine.gravity) {
+                    for(Ball ball : currentYear.getBalls()) {
+                        ball.gravity = settings.gravity/1000f;
+                        ball.gravitation = settings.gravitation;
+                    }
+                    flush();
                 }
                 break;
             case FORCES:
-                for(Ball ball : currentYear.getBalls()) {
-                    ball.force = settings.forces/10000f;
-                    ball.forces = settings.ballsForces;
+                if(settings.forces != mainEngine.forces) {
+                    for(Ball ball : currentYear.getBalls()) {
+                        ball.force = settings.forces/10000f;
+                        ball.forces = settings.ballsForces;
+                    }
+                    flush();
                 }
                 break;
             case SPEED:
                 return false;
+            case UNISCALE:
+                if (mainEngine.universeScale != settings.universeScale) {
+                    settings.setUniScale();
+                    flush();
+                }
+                break;
         }
-        flush();
         return true;
     }
 
@@ -135,33 +161,35 @@ public class Age {
             balls.get(i).drawPath(batch, history.subList(year, calculatedYear), i);
             balls.get(i).draw(batch);
         }
-        adjustBufor();
+        adjustBuffer();
         sem.release();
         if(mainEngine.newBall != null) {
             mainEngine.newBall.grow();
             mainEngine.newBall.draw(batch);
         }
-        addYear(year + bufor < calculatedYear ? 0 : settings.speed);
-        //addYear(settings.speed == 0 ? 0 : (calculatedYear - year >= bufor ? settings.speed : 1));
+        addYear(year + buffer < calculatedYear ? 0 : settings.speed);
+        //addYear(settings.speed == 0 ? 0 : (calculatedYear - year >= buffer ? settings.speed : 1));
     }
 
-    private void adjustBufor() {
+    // Adjust buffer if too big or too small
+    private void adjustBuffer() {
         float deltaTime = Gdx.graphics.getDeltaTime();
-        if (deltaTime > 0.025f && bufor > Math.min(50, 2500f/(currentYear.getBalls().size))) {
+        if (deltaTime > 0.025f && buffer > Math.min(50, 2500f/(currentYear.getBalls().size))) {
             if(deltaTime > 0.05f) {
-                bufor -= bufor/10;
+                buffer -= buffer /10;
             } else {
-                bufor--;
+                buffer--;
             }
-            if(year+bufor < calculatedYear) {
-                calculatedYear = year+bufor;
+            if(year+ buffer < calculatedYear) {
+                calculatedYear = year+ buffer;
                 history.subList(calculatedYear+1, history.size()).clear();
             }
-        } else if (deltaTime < 0.02f && bufor < Math.min(2000, (25000f/(currentYear.getBalls().size)))) {
-            bufor += 1;
+        } else if (deltaTime < 0.02f && buffer < Math.min(2000, (25000f/(currentYear.getBalls().size)))) {
+            buffer += 1;
         }
     }
 
+    // Adds i years to calculate and load currentYear
     private void addYear(int i) {
         try {
             sem.acquire();
@@ -187,7 +215,7 @@ public class Age {
         threadCalculate();
     }
 
-    // Calculates history
+    // Calculates new history.
     private void calculate() {
         try {
             sem.acquire();
@@ -202,9 +230,14 @@ public class Age {
                 newYear.get(i).act(newYear.get(j));
             }
             if (newYear.size == i+1) { newYear.get(i).act(null); }
-            newYear.get(i).move();
+            newYear.get(i).move().setProjection(newYear.get(0).getZ());
         }
-
+        newYear.sort(new Comparator<Ball>() {
+            @Override
+            public int compare(Ball o1, Ball o2) {
+                return (int) (o2.getZ() - o1.getZ());
+            }
+        });
 
         calculatedYear++;
         history.add(calculatedYear, new HistoryEntry(newYear));
@@ -215,6 +248,7 @@ public class Age {
         eraseHistory();
     }
 
+    // Erases history so it doesn't take much space.
     private void eraseHistory() {
         try {
             sem.acquire();
@@ -232,13 +266,14 @@ public class Age {
         threadCalculate();
     }
 
+    // Called multiple times from TaskRun
     public void calculateAll() {
         try {
             sem.acquire();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        difference = bufor - (calculatedYear - year);
+        difference = buffer - (calculatedYear - year);
         sem.release();
         if (difference <= 0) {
             try {
@@ -254,18 +289,18 @@ public class Age {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            difference = bufor - (calculatedYear - year);
+            difference = buffer - (calculatedYear - year);
             sem.release();
             calculate();
         }
     }
 
+    // Refresh .wait() from calculateAll function
     public void threadCalculate() {
         synchronized(this) {
             this.notify();
         }
     }
-
 
     // Clones Array<Ball> to creates new list with new balls
     private Array<Ball> clone(Array<Ball> yearToCopy) {
@@ -300,6 +335,7 @@ public class Age {
         flush();
     }
 
+    // Removes ball from currentYear
     public void removeBall(Ball ball) {
         try {
             sem.acquire();
@@ -311,6 +347,7 @@ public class Age {
         flush();
     }
 
+    // Recalculates years from currentYear starting
     public void flush() {
         try {
             sem.acquire();
@@ -365,11 +402,13 @@ public class Age {
         mainEngine.handlingBall = false;
     }
 
+    // Returns currentYear
     public int currentYear() {
         return year;
     }
 
-    public int calculatedYear() {
+    // Returns buffer
+    public int getBufferSize() {
         return calculatedYear - settings.ballsTail;
     }
 

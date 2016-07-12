@@ -8,15 +8,17 @@ import java.math.BigInteger;
 
 public class HistoryEntry {
     final Array<Ball> balls;
-    BigInteger year;
+    BigInteger year = BigInteger.ZERO;
     static BigInteger nextYear = BigInteger.ZERO;
 
     public HistoryEntry (Array<Ball> array) {
         balls = array;
     }
 
-    public BigInteger getYear() {
-        return year;
+    public String getYear() {
+        synchronized(year) {
+            return year.toString();
+        }
     }
 
     public Array<Ball> getBalls() {

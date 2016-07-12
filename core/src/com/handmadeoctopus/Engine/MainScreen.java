@@ -140,9 +140,8 @@ public class MainScreen implements Screen {
 
         // Box, cameras and handler updated.
 
-        box.set(0, 0, this.width, this.height);
+        box.set(0, 0, 0, this.width, this.height, this.width);
 
-        zoom.setWorldBounds(0, 0,  this.width,  this.height);
         camera.setToOrtho(false, this.width, this.height);
         camera.position.set(camera.viewportWidth / 2f, camera.viewportHeight / 2f, 0);
         camera.update();

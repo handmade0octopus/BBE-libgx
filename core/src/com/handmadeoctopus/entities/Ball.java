@@ -20,7 +20,7 @@ import java.util.Random;
 public class Ball {
     // Position, size and speed of ball//
     Position position;
-    public float radius, mass, x, y, speedX, speedY, xMin, xMax, yMin, yMax, x1, y1;
+    public float radius, mass, x, y, speedX, speedY, speedZ, xMin, xMax, yMin, yMax, zMin, zMax, x1, y1, projection;
     public float gravity = 0, force = 0, springiness = 1, speed = 6, massScale = 1;
     public Texture texture = MainEngine.TEXTURE;
     public Boolean grow = false, gravitation = true, hits = true, forces = true, touchable = false;
@@ -32,40 +32,19 @@ public class Ball {
     // Tail
     public int tail = 0;
 
-    // Main constructor
-    public Ball(float radius, float x, float y, float speedX, float speedY, Color clr, Settings settings) {
-        this.settings = settings;
-        set(radius, x, y, speedX, speedY, clr);
-    }
-
     // Constructor with random values of color and speed
     public Ball(float radius, float x, float y, Settings settings) {
         this.settings = settings;
         randomSpeedXY();
         randomColour();
-        set(radius, x, y);
+        set(radius, x, y, 0);
     }
 
-    // Constructor for random ball within the box
-    public Ball (float radius, Box box, Settings settings) {
-        this.settings = settings;
-        this.box = box;
-        float x = rnd.nextFloat()*box.width, y= rnd.nextFloat()*box.height;
-        while(x < box.xMin && x > box.xMax) {
-            x = rnd.nextFloat()*box.width;
-        }
-        while(y < box.yMin && y > box.yMax) {
-            y = rnd.nextFloat()*box.height;
-        }
-        randomSpeedXY();
-        randomColour();
-        set(radius, x, y);
-    }
 
     public Ball (Settings settings) {
         this.settings = settings;
         setBallParameters(settings.gravity, settings.springiness, settings.ballsTail, settings.forces, settings.speed, settings.gravitation, settings.ballsForces, settings.box);
-        float x = rnd.nextFloat()*box.width + box.xMin, y= rnd.nextFloat()*box.height + box.yMin;
+        float x = rnd.nextFloat()*box.width + box.xMin, y= rnd.nextFloat()*box.height + box.yMin, z= rnd.nextFloat()*box.depth + box.zMin;
         while(x < box.xMin && x > box.xMax) {
             x = rnd.nextFloat()*box.width;
         }
@@ -74,7 +53,7 @@ public class Ball {
         }
         randomSpeedXY();
         randomColour();
-        set(settings.ballsSize, x, y);
+        set(settings.ballsSize, x, y, z);
 
     }
 
@@ -87,6 +66,7 @@ public class Ball {
         position = new Position(ball.position);
         speedX = ball.speedX;
         speedY = ball.speedY;
+        speedZ = ball.speedZ;
         xMin = ball.xMin;
         xMax = ball.xMax;
         yMin = ball.yMin;
@@ -115,32 +95,35 @@ public class Ball {
 
     // Changes speed to random
     private void randomSpeedXY() {
-        float sX = 0;
-        float sY = 0;
+        float sX = 0,  sY = 0, sZ = 0;
+
         while (sX == 0 && sY == 0) {
             sX = rnd.nextFloat() * speed - speed/2f;
             sY = rnd.nextFloat() * speed - speed/2f;
+            sZ = rnd.nextFloat() * speed - speed/2f;
         }
         speedX = sX;
         speedY = sY;
+        speedZ = sZ;
     }
 
     // Sets all ball values
-    public void set(float radius, float x, float y, float speedX, float speedY, Color clr) {
+    public void set(float radius, float x, float y, float z, float speedX, float speedY, float speedZ, Color clr) {
         this.radius = radius;
         updateMass();
-        this.position = new Position(x, y, 0);
+        this.position = new Position(x, y, z);
         this.x = x;
         this.y = y;
         this.clr = clr;
         this.speedX = speedX;
         this.speedY = speedY;
+        this.speedZ = speedZ;
         touchable = true;
     }
 
     // Sets radius, x and y
-    public void set(float radius, float x, float y) {
-        set(radius, x, y, speedX, speedY, clr);
+    public void set(float radius, float x, float y, float z) {
+        set(radius, x, y, z, speedX, speedY, speedZ, clr);
     }
 
     // Sets other ball parameters
@@ -191,6 +174,7 @@ public class Ball {
     public Ball move() {
         position.x += speedX;
         position.y += speedY;
+        position.z += speedZ;
         return this;
     }
 
@@ -199,8 +183,10 @@ public class Ball {
         if (less <= 0) { less = 1; }
         speedY *= springiness /less;
         speedX *= springiness /less;
+        speedZ *= springiness /less;
         if (Math.abs(speedX) < 0.01) { speedX = 0; }
         if (Math.abs(speedY) < 0.01) { speedY = 0; }
+        if (Math.abs(speedZ) < 0.01) { speedZ = 0; }
     }
 
     // Slows ball after hit
@@ -215,6 +201,8 @@ public class Ball {
         yMax = box.yMax;
         xMin = box.xMin;
         yMin = box.yMin;
+        zMin = box.zMin;
+        zMax = box.zMax;
 
         // When ball collides with box
         if (position.x + radius + speedX > xMax || position.x - radius + speedX < xMin) {
@@ -226,6 +214,12 @@ public class Ball {
             speedY = -springiness * speedY;
             if (position.y - radius < yMin) { position.y = yMin + radius; }
             else if (position.y + radius + speedY > yMax) { position.y = yMax - radius; }
+        }
+
+        if (position.z + radius + speedZ > zMax || position.z - radius + speedZ < zMin) {
+            speedZ = -springiness * speedZ;
+            if (position.z - radius < zMin) { position.z = zMin + radius; }
+            else if (position.z + radius + speedZ > zMax) { position.z = zMax - radius; }
         }
 
         // Balls collide with each other
@@ -364,10 +358,12 @@ public class Ball {
         hit(otherBall);
     }
 
+    // Update mass from the radius.
     public void updateMass() {
         mass = radius*radius*radius * 3.14f * massScale;
     }
 
+    // Draws tail for ball from List of history entries, d is this ball ID.
     public void drawTail(SpriteBatch batch, List<HistoryEntry> historyEntries, int d) {
         for (int i = 0; i < historyEntries.size(); i++) {
             float alpha = clr.a*((1f+i)/historyEntries.size());
@@ -379,6 +375,7 @@ public class Ball {
         }
     }
 
+    // Draws path in front of ball
     public void drawPath(SpriteBatch batch, List<HistoryEntry> historyEntries, int d) {
         for (int i = historyEntries.size()-1; i >= 0; i--) {
             float alpha = clr.a*(((historyEntries.size()-i/1f)/historyEntries.size()));
@@ -390,4 +387,12 @@ public class Ball {
         }
     }
 
+    public float getZ() {
+        return position.z;
+    }
+
+    public void setProjection(float projection) {
+        this.projection = projection/getZ();
+
+    }
 }
