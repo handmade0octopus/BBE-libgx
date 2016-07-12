@@ -299,7 +299,7 @@ public class Menu {
     // Updates menu position after resize.
     public void update() {
         float diff = 0.95f * stage.getHeight() - topY;
-        for (int i = 2; i < stageEntry.size; i++) {
+        for (int i = 2; i < stageEntry.size-2; i++) {
             stageEntry.get(i).moveBy(0, diff);
         }
         stageEntry.get(0).moveBy(0, diff);
