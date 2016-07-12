@@ -48,8 +48,7 @@ public class HistoryEntry {
 
     // Creates random new ball
     static Ball newRandomBall(Settings settings) {
-        Ball ball = new Ball(settings);
-        return ball;
+        return new Ball(settings);
     }
 
     // Clones Array<Ball> to creates new list with new balls

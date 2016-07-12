@@ -226,12 +226,12 @@ public class Age {
             if (newYear.size == i+1) { newYear.get(i).act(null); }
             newYear.get(i).move().setProjection(newYear.get(0).getZ());
         }
-        newYear.sort(new Comparator<Ball>() {
+       /* newYear.sort(new Comparator<Ball>() {
             @Override
             public int compare(Ball o1, Ball o2) {
                 return (int) (o2.getZ() - o1.getZ());
             }
-        });
+        });*/
 
         calculatedYear++;
         history.add(calculatedYear, new HistoryEntry(newYear));
@@ -304,7 +304,6 @@ public class Age {
             e.printStackTrace();
         }
         drawYear.getBalls().add(ball);
-        settings.ballsQuantity++;
         sem.release();
         flush();
     }

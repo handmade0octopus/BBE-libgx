@@ -101,7 +101,7 @@ public class Settings {
         ballsTail = 10;
         springiness = 100;
         gravity = 0;
-        forces = 0;
+        forces = 10;
         speed = 1;
         universeScale = 10;
         save();

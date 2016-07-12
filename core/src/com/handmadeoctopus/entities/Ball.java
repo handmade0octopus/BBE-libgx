@@ -172,6 +172,7 @@ public class Ball {
 
     // Moves ball
     public Ball move() {
+        gravity();
         position.x += speedX;
         position.y += speedY;
         position.z += speedZ;
@@ -303,7 +304,7 @@ public class Ball {
 
     // Performs gravity decrease in speedY
     public void gravity() {
-        if (gravitation && y + radius < yMax) { speedY -= gravity; }
+        if (gravitation && y - radius > yMin) { speedY -= gravity; }
     }
 
     // Sets ball speed by new X, Y
@@ -354,7 +355,6 @@ public class Ball {
     // Performs all ball actions
     public void act(Ball otherBall) {
         grow();
-        gravity();
         hit(otherBall);
     }
 
