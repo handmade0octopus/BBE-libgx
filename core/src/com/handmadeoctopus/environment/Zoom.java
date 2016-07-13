@@ -32,8 +32,6 @@ public class Zoom {
         this.bottom = new BoundingBox(new Vector3(0, bottom, 0), new Vector3(right, bottom, 0));
         camera.position.set((bottom+top)/2f, (left+right)/2f, 0);
         camera.update();
-        firstPosition.set(camera.position.x, camera.position.y, 0);
-
         setMaxZoom();
     }
 
@@ -42,10 +40,11 @@ public class Zoom {
         while (!(camera.frustum.boundsInFrustum(left) || camera.frustum.boundsInFrustum(right)
                 || camera.frustum.boundsInFrustum(bottom) || camera.frustum.boundsInFrustum(top)
                 || camera.frustum.boundsInFrustum(left) || camera.frustum.boundsInFrustum(bottom))) {
-            camera.zoom += 0.01;
+            camera.zoom += 0.1;
             camera.update();
         }
         maxZoom = camera.zoom;
+        firstPosition.set(camera.position.x, camera.position.y, 0);
         camera.update();
     }
 
@@ -78,19 +77,19 @@ public class Zoom {
     public void ensureZoom() {
         checkCamera();
         while(camera.frustum.boundsInFrustum(left)) {
-            camera.position.x += 0.2;
+            camera.position.x += 1;
             camera.update();
         }
         while(camera.frustum.boundsInFrustum(right)) {
-            camera.position.x -= 0.2;
+            camera.position.x -= 1;
             camera.update();
         }
         while(camera.frustum.boundsInFrustum(bottom)) {
-            camera.position.y += 0.2;
+            camera.position.y += 1;
             camera.update();
         }
         while(camera.frustum.boundsInFrustum(top)) {
-            camera.position.y -= 0.2;
+            camera.position.y -= 1;
             camera.update();
         }
 
@@ -188,7 +187,10 @@ public class Zoom {
     // Checks if camera zoom is within set borders.
     public void checkCamera() {
         if (camera.zoom < MIN_ZOOM) { camera.zoom = MIN_ZOOM; }
-        else if (camera.zoom > maxZoom) { camera.zoom = maxZoom; }
+        else if (camera.zoom > maxZoom) {
+            camera.zoom = maxZoom;
+            camera.position.set(firstPosition);
+        }
         camera.update();
     }
 

@@ -335,6 +335,7 @@ public class Age {
         }
         if(calculatedYear > year) {
             calculatedYear = year;
+            HistoryEntry.setYear(drawYear.getYear());
             history.subList(year+1, history.size()).clear();
         }
         sem.release();

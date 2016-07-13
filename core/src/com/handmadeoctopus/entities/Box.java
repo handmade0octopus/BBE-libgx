@@ -34,8 +34,8 @@ public class Box {
 
     // Draws box on screen
     public void draw(ShapeRenderer renderer) {
-        renderer.setColor(Color.BLACK);
-        renderer.rect(xMin, yMin, width, height);
+    //renderer.setColor(Color.BLACK);
+    //    renderer.rect(xMin, yMin, width, height);
     }
 
 

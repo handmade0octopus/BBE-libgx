@@ -176,7 +176,7 @@ public class Settings {
 
 
     // Sets parameters depending on what you put into this function
-    int setBallsParam(float newValue, TextButton button, TextButton bgButton, boolean relative,
+    private int setBallsParam(float newValue, TextButton button, TextButton bgButton, boolean relative,
                         boolean exact, float var, float min, float max) {
         float newQuant = 0;
         float diff = newValue + bgButton.getX();
@@ -288,7 +288,7 @@ public class Settings {
     }
 
     // Sets zoom class to this one
-    public void setZoom(Zoom zoom) {
+    void setZoom(Zoom zoom) {
         this.zoom = zoom;
     }
 
@@ -297,19 +297,19 @@ public class Settings {
         zoom.reset();
     }
 
-    public void setMainEngine(MainEngine mainEngine) {
+    void setMainEngine(MainEngine mainEngine) {
         this.mainEngine = mainEngine;
     }
 
-    public void setBox(Box box) {
+    void setBox(Box box) {
         this.box = box;
     }
 
-    public void setAge(Age age) {
+    void setAge(Age age) {
         this.age = age;
     }
 
-    public void setUniScale(float f) {
+    void setUniScale(float f) {
         this.screenRatio = f;
         int x = (int) (-BouncingBallEngine.WIDTH*universeScale);
         int y = (int) (-BouncingBallEngine.WIDTH*f*universeScale);
@@ -319,7 +319,7 @@ public class Settings {
         box.set(x, y, x, wi, he, wi);
     }
 
-    public void setUniScale() {
+    void setUniScale() {
         setUniScale(screenRatio);
     }
 

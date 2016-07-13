@@ -15,9 +15,9 @@ public class HistoryEntry {
         balls = array;
     }
 
-    public String getYear() {
+    public BigInteger getYear() {
         synchronized(year) {
-            return year.toString();
+            return year;
         }
     }
 
@@ -27,6 +27,10 @@ public class HistoryEntry {
 
     void resetYear() {
         nextYear = BigInteger.ZERO;
+    }
+
+    static void setYear(BigInteger e) {
+        nextYear = e;
     }
 
     void addYear(int e) {

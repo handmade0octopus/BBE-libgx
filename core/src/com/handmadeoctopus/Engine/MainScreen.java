@@ -91,7 +91,7 @@ public class MainScreen implements Screen {
     @Override
     public void render(float delta) {
         // Main rendering class. First screen is cleared, then cameras are updated and combined with batches and renderer.
-        Gdx.gl.glClearColor(1, 1, 1, 1);
+        Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         Gdx.gl.glEnable(GL20.GL_BLEND);
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
