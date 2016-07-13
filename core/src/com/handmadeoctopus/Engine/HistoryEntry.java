@@ -39,6 +39,7 @@ public class HistoryEntry {
     // Gets new year
     static HistoryEntry getNewYear(int size, Settings settings) {
         Array<Ball> newYear = new Array<Ball>();
+        settings.setUniScale();
         newYear.setSize(size);
         for(int i = 0; i < size; i++) {
             newYear.set(i, newRandomBall(settings));

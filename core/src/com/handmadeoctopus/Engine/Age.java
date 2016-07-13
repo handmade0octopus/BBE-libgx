@@ -49,19 +49,25 @@ public class Age {
         calculateThread = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
         settings.setAge(this);
         reload();
+        calculateThread.submit(run);
     }
 
     // Reloads game with new age
     public void reload() {
+        if (drawYear != null) { drawYear.resetYear(); }
+        try {
+            sem.acquire();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         year = 0;
         calculatedYear = 0;
-        if (drawYear != null) { drawYear.resetYear(); }
-        flush();
         drawYear = HistoryEntry.getNewYear(settings.ballsQuantity, settings);
         drawYear.resetYear();
         history.add(year, drawYear);
         difference = buffer - (calculatedYear - year);
-        calculateThread.submit(run);
+        sem.release();
+        flush();
     }
 
     // Updates balls parameters
@@ -226,12 +232,12 @@ public class Age {
             if (newYear.size == i+1) { newYear.get(i).act(null); }
             newYear.get(i).move().setProjection(newYear.get(0).getZ());
         }
-       /* newYear.sort(new Comparator<Ball>() {
+     /*   newYear.sort(new Comparator<Ball>() {
             @Override
             public int compare(Ball o1, Ball o2) {
                 return (int) (o2.getZ() - o1.getZ());
             }
-        });*/
+        }); */
 
         calculatedYear++;
         history.add(calculatedYear, new HistoryEntry(newYear));

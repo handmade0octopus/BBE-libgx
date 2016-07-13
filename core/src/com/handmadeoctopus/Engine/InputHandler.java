@@ -20,7 +20,6 @@ public class InputHandler implements InputProcessor {
     float x, y, x1, y1, w, h, f; // Variables to control input.
     int lastSpeed = 1;
 
-
     public InputHandler(OrthographicCamera camera, OrthographicCamera uiCamera, Zoom zoom, Stage stage, Settings settings) {
         this.camera = camera;
         this.uiCamera = uiCamera;
@@ -29,13 +28,13 @@ public class InputHandler implements InputProcessor {
         this.settings = settings;
     }
 
-
     @Override
     public boolean keyDown(int keycode) {
-        if (keycode == Input.Keys.SPACE && settings.speed == 0) {
+        // Pauses on SPACE button pressed
+        if (keycode  == Input.Keys.SPACE && settings.speed  == 0) {
             settings.speed = lastSpeed;
             if (settings.menu != null) { settings.menu.updateValues(); }
-        } else if (keycode == Input.Keys.SPACE) {
+        } else if (keycode  == Input.Keys.SPACE) {
             lastSpeed = Math.max(1, settings.speed);
             settings.speed = 0;
             if (settings.menu != null) { settings.menu.updateValues(); }

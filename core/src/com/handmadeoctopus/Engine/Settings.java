@@ -15,7 +15,7 @@ public class Settings {
     // Variables for main settings
     public int ballsQuantity, ballsSize, ballsTail, springiness, gravity, forces, speed, universeScale;
     public boolean gravitation, ballsForces, reset = false;
-    float f;
+    float screenRatio = 0.5f;
     Menu menu; // To control and update after change in values
     public Zoom zoom;
     MainEngine mainEngine;
@@ -46,10 +46,10 @@ public class Settings {
     // Loads prefs when created.
     public Settings() {
         prefs = Gdx.app.getPreferences(SettingsEnum.PREFS.s);
-        load();
         if (!prefs.getBoolean("SET")) {
             resetDefaults();
         }
+        load();
     }
 
     // Sets all values if necessary.
@@ -310,7 +310,7 @@ public class Settings {
     }
 
     public void setUniScale(float f) {
-        this.f = f;
+        this.screenRatio = f;
         int x = (int) (-BouncingBallEngine.WIDTH*universeScale);
         int y = (int) (-BouncingBallEngine.WIDTH*f*universeScale);
         int wi = (int) (BouncingBallEngine.WIDTH*universeScale*2 + BouncingBallEngine.WIDTH/2);
@@ -320,7 +320,7 @@ public class Settings {
     }
 
     public void setUniScale() {
-        setUniScale(f);
+        setUniScale(screenRatio);
     }
 
 
