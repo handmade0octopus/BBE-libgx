@@ -165,7 +165,7 @@ public class Zoom {
 
     }
 
-    // Helps update and ensure position of camera.
+    // Helps updatePosition and ensure position of camera.
     public void touchUpAction (int pointer) {
         if (zooming && pointer == 0) {
             zooming = false;

@@ -69,7 +69,7 @@ public class MainScreen implements Screen {
         stage = new Stage(new ExtendViewport(width, height, uiCamera));
 
         // Settings, where all game characteristics are kept.
-        settings = new Settings();
+        settings = new Settings(this);
         settings.setZoom(zoom);
 
         // Setting up handler. And making it main handler of the game.

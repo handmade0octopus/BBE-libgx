@@ -43,7 +43,14 @@ public class Ball {
 
     public Ball (Settings settings) {
         this.settings = settings;
-        setBallParameters(settings.gravity, settings.springiness, settings.ballsTail, settings.forces, settings.speed, settings.gravitation, settings.ballsForces, settings.box);
+        setBallParameters(settings.getSetting(Settings.SettingsEnum.GRAVITY).getValue(),
+                settings.getSetting(Settings.SettingsEnum.SPRINGINESS).getValue(),
+                settings.getSetting(Settings.SettingsEnum.BALLSTAIL).getValue(),
+                settings.getSetting(Settings.SettingsEnum.FORCES).getValue(),
+                settings.getSetting(Settings.SettingsEnum.SPEED).getValue(),
+                settings.getSetting(Settings.SettingsEnum.GRAVITY).getValueBool(),
+                settings.getSetting(Settings.SettingsEnum.FORCES).getValueBool(),
+                settings.box);
         float x = rnd.nextFloat()*box.width + box.xMin, y= rnd.nextFloat()*box.height + box.yMin, z= rnd.nextFloat()*box.depth + box.zMin;
         while(x < box.xMin && x > box.xMax) {
             x = rnd.nextFloat()*box.width;
@@ -53,7 +60,7 @@ public class Ball {
         }
         randomSpeedXY();
         randomColour();
-        set(settings.ballsSize, x, y, z);
+        set(settings.getSetting(Settings.SettingsEnum.BALLSSIZE).getValue(), x, y, z);
 
     }
 
@@ -167,7 +174,9 @@ public class Ball {
     }
 
     public void setBallParameters(Settings settings) {
+        this.settings = settings;
         setBallParameters(settings.gravity, settings.springiness, settings.ballsTail, settings.forces, settings.speed, settings.gravitation, settings.ballsForces, settings.box);
+
     }
 
     // Moves ball
@@ -315,7 +324,7 @@ public class Ball {
         else { speedX = (x - x1) / 50f; }
         if (Math.abs(y - y1) < radius/3) { speedY = 0; }
         else { speedY = (y - y1) / 50f; }
-        if (settings.speed == 0) {
+        if (settings.getSetting(Settings.SettingsEnum.SPEED).getValue() == 0) {
             settings.age.flush();
         }
     }

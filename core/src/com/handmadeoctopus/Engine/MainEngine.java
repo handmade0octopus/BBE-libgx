@@ -14,6 +14,8 @@ import com.handmadeoctopus.entities.Ball;
 import com.handmadeoctopus.entities.Box;
 import com.handmadeoctopus.environment.Zoom;
 
+import java.util.HashMap;
+
 public class MainEngine {
     Array<Ball> balls = null;
     int ballsQuantity, ballsSize, ballsTail, springiness, gravity, forces, speed, universeScale;
@@ -23,6 +25,7 @@ public class MainEngine {
     private Zoom zoom;
     private Settings settings;
     private Age age;
+    private HashMap<Settings.SettingsEnum, Integer> settingMap;
 
     public static final Pixmap PIXMAP = new Pixmap(Gdx.files.internal("circle.png"));
     public static final Texture TEXTURE = new Texture(PIXMAP, true);
@@ -41,8 +44,8 @@ public class MainEngine {
         settings.setBox(box);
         balls = new Array<Ball>();
         age = new Age(settings, this);
-
-        TEXTURE.setFilter(Texture.TextureFilter.MipMapLinearNearest, Texture.TextureFilter.MipMapLinearNearest);
+        settingMap = new HashMap<Settings.SettingsEnum, Integer>();
+                TEXTURE.setFilter(Texture.TextureFilter.MipMapLinearNearest, Texture.TextureFilter.MipMapLinearNearest);
         init();
     }
 
@@ -52,9 +55,12 @@ public class MainEngine {
         age.reload();
     }
 
-
     // Load variables to this class
     private void loadVariables() {
+        for (Settings.SettingsEnum set : Settings.SettingsEnum.values()) {
+            settingMap.put(set, settings.getSetting(set).getValue());
+        }
+
         ballsQuantity = settings.ballsQuantity;
         ballsSize = settings.ballsSize;
         ballsTail = settings.ballsTail;
@@ -92,8 +98,8 @@ public class MainEngine {
     }
 
     // Updates balls after value is changed
-    public void update(Settings.SettingsEnum settingsEnum) {
-        age.updateBalls(settingsEnum);
+    public void action(SettingEntry setting) {
+        age.updateBalls(setting);
         loadVariables();
     }
 
@@ -104,5 +110,13 @@ public class MainEngine {
 
     public void actionUp(float x, float y) {
         age.actionUp(x, y);
+    }
+
+    int getSetting(Settings.SettingsEnum setting) {
+        return settingMap.get(setting);
+    }
+
+    public void buttonDown(int keycode) {
+        age.buttonDown(keycode);
     }
 }

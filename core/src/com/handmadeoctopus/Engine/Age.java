@@ -18,7 +18,7 @@ import java.util.concurrent.*;
 public class Age {
 
     public int buffer = 300;
-    private int year, calculatedYear, difference, fps;
+    private int year, calculatedYear, difference, ballsTail = 0, lastSpeed = 1;
     public HistoryEntry drawYear;
     private Array<Ball> newYear, balls;
     private LinkedList<HistoryEntry> history;
@@ -62,7 +62,7 @@ public class Age {
         }
         year = 0;
         calculatedYear = 0;
-        drawYear = HistoryEntry.getNewYear(settings.ballsQuantity, settings);
+        drawYear = HistoryEntry.getNewYear(settings.getSetting(Settings.SettingsEnum.BALLSQUANTITY).getValue(), settings);
         drawYear.resetYear();
         history.add(year, drawYear);
         difference = buffer - (calculatedYear - year);
@@ -71,77 +71,76 @@ public class Age {
     }
 
     // Updates balls parameters
-    public boolean updateBalls(Settings.SettingsEnum settingsEnum) {
-        switch(settingsEnum) {
+    public void updateBalls(SettingEntry settingEntry) {
+        Settings.SettingsEnum settingId = settingEntry.getSettingId();
+        switch(settingId) {
+            case RESET: settings.resetDefaults(); break;
             case BALLSQUANTITY:
-                int diff = settings.ballsQuantity - mainEngine.ballsQuantity;
+                int diff = settingEntry.getValue() - mainEngine.getSetting(settingId);
                 if(diff > 0) {
                     for(int i = 0; i < diff; i++) {
-                        drawYear.getBalls().add(HistoryEntry.newRandomBall(settings));
+                        drawYear.getBalls().add(new Ball(settings));
                     }
-                    flush();
                 } else if (diff < 0) {
-                    drawYear.getBalls().setSize(settings.ballsQuantity);
-                    flush();
+                    drawYear.getBalls().setSize(settingEntry.getValue());
                 }
                 break;
             case BALLSSIZE:
-                if(settings.ballsSize != mainEngine.ballsSize) {
-                    float newSize = settings.ballsSize;
-                    float oldSize = mainEngine.ballsSize;
+                if(settingEntry.getValue() != mainEngine.getSetting(settingId)) {
+                    float newSize = settingEntry.getValue();
+                    float oldSize = mainEngine.getSetting(settingId);
                     float changeSize = newSize/oldSize;
                     for(Ball ball : drawYear.getBalls()) {
                         ball.radius *= changeSize;
                         ball.updateMass();
                     }
-                    flush();
                 }
 
                 break;
             case BALLSTAIL:
-                if(settings.ballsTail != mainEngine.ballsTail) {
+                if(settingEntry.getValue() != mainEngine.getSetting(settingId)) {
+                    ballsTail = (settingEntry.getValue());
                     for(Ball ball : drawYear.getBalls()) {
-                        ball.tail = (settings.ballsTail);
+                        ball.tail = ballsTail;
                     }
-                    flush();
                 }
                 break;
             case SPRINGINESS:
-                if(settings.springiness != mainEngine.springiness) {
+                if(settingEntry.getValue() != mainEngine.getSetting(settingId)) {
                     for(Ball ball : drawYear.getBalls()) {
-                        ball.springiness = settings.springiness/100f;
-                        flush();
+                        ball.springiness = settingEntry.getValue()/100f;
                     }
                 }
                 break;
             case GRAVITY:
-                if(settings.gravity != mainEngine.gravity) {
+                if(settingEntry.getValue() != mainEngine.getSetting(settingId)) {
                     for(Ball ball : drawYear.getBalls()) {
-                        ball.gravity = settings.gravity/1000f;
-                        ball.gravitation = settings.gravitation;
+                        ball.gravity = settingEntry.getValue()/1000f;
+                        ball.gravitation = settingEntry.getValueBool();
                     }
-                    flush();
                 }
                 break;
             case FORCES:
-                if(settings.forces != mainEngine.forces) {
+                if(settingEntry.getValue() != mainEngine.getSetting(settingId)) {
                     for(Ball ball : drawYear.getBalls()) {
-                        ball.force = settings.forces/10000f;
-                        ball.forces = settings.ballsForces;
+                        ball.force = settingEntry.getValue()/10000f;
+                        ball.forces = settingEntry.getValueBool();
                     }
-                    flush();
                 }
                 break;
             case SPEED:
-                return false;
+                break;
             case UNISCALE:
-                if (mainEngine.universeScale != settings.universeScale) {
+                if (mainEngine.getSetting(settingId) != settingEntry.getValue()) {
+                    settings.universeScale = settingEntry.getValue();
                     settings.setUniScale();
-                    flush();
                 }
                 break;
+            case RELOAD:
+                if(mainEngine != null) { mainEngine.reload(); }
+                break;
         }
-        return true;
+        if(settingEntry.getSettingId().flush) { flush(); }
     }
 
     // Draws all balls and performs actions on them BATCH
@@ -167,8 +166,7 @@ public class Age {
             mainEngine.newBall.grow();
             mainEngine.newBall.draw(batch);
         }
-        addYear(year + buffer < calculatedYear ? 0 : settings.speed);
-        //addYear(settings.speed == 0 ? 0 : (calculatedYear - year >= buffer ? settings.speed : 1));
+        addYear(year + buffer < calculatedYear ? 0 : settings.getSetting(Settings.SettingsEnum.SPEED).getValue());
     }
 
     // Adjust buffer if too big or too small
@@ -190,24 +188,21 @@ public class Age {
     }
 
     // Adds i years to calculate and load drawYear
-    private void addYear(int i) {
+    private void addYear(int years) {
         try {
             sem.acquire();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        int e = 0;
-        for(int d = 0; d < i; d++) {
-            year++;
-            e++;
-        }
+
+        year += years;
 
         if (year >= calculatedYear) {
             year = calculatedYear;
             drawYear = history.get(year);
         } else if (year < calculatedYear) {
             drawYear = history.get(year);
-            drawYear.addYear(e);
+            drawYear.addYear(years);
         }
 
 
@@ -243,8 +238,6 @@ public class Age {
         history.add(calculatedYear, new HistoryEntry(newYear));
         sem.release();
 
-
-        threadCalculate();
         eraseHistory();
     }
 
@@ -255,7 +248,7 @@ public class Age {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        int maxHistory = settings.ballsTail*2;
+        int maxHistory = ballsTail*2;
         if (year > maxHistory) {
             int difference = year - maxHistory;
             history.subList(0, difference).clear();
@@ -335,7 +328,6 @@ public class Age {
         }
         if(calculatedYear > year) {
             calculatedYear = year;
-            HistoryEntry.setYear(drawYear.getYear());
             history.subList(year+1, history.size()).clear();
         }
         sem.release();
@@ -361,7 +353,7 @@ public class Age {
             mainEngine.newBall.setPosition(x,y);
             mainEngine.newBall.setBallParameters(settings);
             mainEngine.newBall.startGrowing();
-            if(settings.speed == 0) { addBall(mainEngine.newBall); }
+            if(settings.getSetting(Settings.SettingsEnum.SPEED).getValue() == 0) { addBall(mainEngine.newBall); }
         }
 
         if (Gdx.input.isTouched(0) && Gdx.input.isTouched(1) || Gdx.input.isButtonPressed(Input.Buttons.RIGHT)) {
@@ -377,7 +369,7 @@ public class Age {
     public void actionUp(float x, float y) {
         mainEngine.newBall.stopGrowing();
         mainEngine.newBall.setSpeedByPosition(x, y);
-        if(settings.speed != 0) { addBall(mainEngine.newBall); }
+        if(settings.getSetting(Settings.SettingsEnum.SPEED).getValue() != 0) { addBall(mainEngine.newBall); }
         mainEngine.newBall = null;
         mainEngine.handlingBall = false;
     }
@@ -392,5 +384,12 @@ public class Age {
         return calculatedYear - settings.ballsTail;
     }
 
-
+    public void buttonDown(int keycode) {
+        if (keycode  == Input.Keys.SPACE && settings.getSetting(Settings.SettingsEnum.SPEED).getValue()  == 0) {
+            settings.getSetting(Settings.SettingsEnum.SPEED).setValue(lastSpeed);
+        } else if (keycode  == Input.Keys.SPACE) {
+            lastSpeed = Math.max(1, settings.getSetting(Settings.SettingsEnum.SPEED).getValue());
+            settings.getSetting(Settings.SettingsEnum.SPEED).setValue(0);
+        }
+    }
 }

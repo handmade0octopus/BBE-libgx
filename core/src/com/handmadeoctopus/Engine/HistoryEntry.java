@@ -16,7 +16,7 @@ public class HistoryEntry {
     }
 
     public BigInteger getYear() {
-        synchronized(year) {
+        synchronized(balls) {
             return year;
         }
     }
@@ -29,12 +29,12 @@ public class HistoryEntry {
         nextYear = BigInteger.ZERO;
     }
 
-    static void setYear(BigInteger e) {
-        nextYear = e;
+    void setYear(BigInteger e) {
+        year = e;
     }
 
     void addYear(int e) {
-        synchronized(nextYear) {
+        synchronized(balls) {
             year = nextYear;
             nextYear = nextYear.add(BigInteger.valueOf(e));
         }
@@ -46,14 +46,9 @@ public class HistoryEntry {
         settings.setUniScale();
         newYear.setSize(size);
         for(int i = 0; i < size; i++) {
-            newYear.set(i, newRandomBall(settings));
+            newYear.set(i, new Ball(settings));
         }
         return new HistoryEntry(newYear);
-    }
-
-    // Creates random new ball
-    static Ball newRandomBall(Settings settings) {
-        return new Ball(settings);
     }
 
     // Clones Array<Ball> to creates new list with new balls

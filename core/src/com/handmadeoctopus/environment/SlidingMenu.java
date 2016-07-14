@@ -162,7 +162,7 @@ public class SlidingMenu {
                         stage.getViewport().getWorldHeight() - menuButton.getHeight());
                 calculatedYear.setPosition(menuButton.getX() - menuButton.getWidth(), menuButton.getY());
                 currentYear.setPosition(menuButton.getX() - menuButton.getWidth(), menuButton.getY() + currentYear.getHeight());
-                menu.update();
+                menu.updatePosition();
         }
 
         // Update z & q variable for Menu.

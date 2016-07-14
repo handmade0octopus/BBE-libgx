@@ -31,14 +31,7 @@ public class InputHandler implements InputProcessor {
     @Override
     public boolean keyDown(int keycode) {
         // Pauses on SPACE button pressed
-        if (keycode  == Input.Keys.SPACE && settings.speed  == 0) {
-            settings.speed = lastSpeed;
-            if (settings.menu != null) { settings.menu.updateValues(); }
-        } else if (keycode  == Input.Keys.SPACE) {
-            lastSpeed = Math.max(1, settings.speed);
-            settings.speed = 0;
-            if (settings.menu != null) { settings.menu.updateValues(); }
-        }
+        settings.buttonDown(keycode);
         return false;
     }
 
