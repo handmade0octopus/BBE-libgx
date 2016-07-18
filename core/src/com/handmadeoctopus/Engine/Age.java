@@ -11,17 +11,22 @@ import com.handmadeoctopus.entities.Ball;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.*;
 
 public class Age {
 
     public int buffer = 300;
-    private int year, calculatedYear, difference, ballsTail = 0, lastSpeed = 1;
+    private int year, calculatedYear, difference, lastSpeed = 1, drawBuffer = 50;
+    private final int MIN_BUFFER = 50, MAX_BUFFER = 3000, MIN_DRAWB = 0, MAX_DRAWB = 3000;
+    private float averageFPS = 0;
+    private int numberOfFrames = 0;
     public HistoryEntry drawYear;
     private Array<Ball> newYear, balls;
-    private LinkedList<HistoryEntry> history;
+    private List<HistoryEntry> history;
     private boolean sameFrame = false;
     Settings settings;
     MainEngine mainEngine;
@@ -43,7 +48,7 @@ public class Age {
             e.printStackTrace();
         }
 
-        history = new LinkedList<HistoryEntry>();
+        history = new ArrayList<HistoryEntry>();
         sem = new Semaphore(1, true);
         run = new TaskRun(this);
         calculateThread = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
@@ -99,9 +104,8 @@ public class Age {
                 break;
             case BALLSTAIL:
                 if(settingEntry.getValue() != mainEngine.getSetting(settingId)) {
-                    ballsTail = (settingEntry.getValue());
                     for(Ball ball : drawYear.getBalls()) {
-                        ball.tail = ballsTail;
+                        ball.tail = (settingEntry.getValue());
                     }
                 }
                 break;
@@ -154,10 +158,10 @@ public class Age {
    //     writer.println(drawYear.getYear());
         balls = drawYear.getBalls();
         for (int i = 0; i < balls.size; i++) {
-            if (year > 1 && settings.ballsTail > 0) {
-                balls.get(i).drawTail(batch, history.subList(0, year - 1), i);
+            if (year > 1) {
+                balls.get(i).drawTail(batch, history.subList(year-settings.getSetting(Settings.SettingsEnum.BALLSTAIL).getValue()*2 < 1 ? 0 : year-settings.getSetting(Settings.SettingsEnum.BALLSTAIL).getValue()*2 - 1, year - 1), i);
             }
-            balls.get(i).drawPath(batch, history.subList(year, calculatedYear), i);
+            balls.get(i).drawPath(batch, history.subList(year, Math.min(year+drawBuffer, calculatedYear)), i);
             balls.get(i).draw(batch);
         }
         adjustBuffer();
@@ -172,18 +176,35 @@ public class Age {
     // Adjust buffer if too big or too small
     private void adjustBuffer() {
         float deltaTime = Gdx.graphics.getDeltaTime();
-        if (deltaTime > 0.025f && buffer > Math.min(50, 2500f/(drawYear.getBalls().size))) {
-            if(deltaTime > 0.05f) {
-                buffer -= buffer /10;
-            } else {
-                buffer--;
+        averageFPS += deltaTime;
+        numberOfFrames++;
+        if(numberOfFrames > 1/deltaTime) {
+            averageFPS /= numberOfFrames;
+            if (averageFPS > 0.025f && buffer > Math.min(MIN_BUFFER, 2500f/(drawYear.getBalls().size))) {
+                if(averageFPS > 0.05f) {
+                    buffer -= Math.max(buffer / 5, 1);
+                } else {
+                    buffer--;
+                }
+                if(year+ buffer < calculatedYear) {
+                    calculatedYear = year+ buffer;
+                    history.subList(calculatedYear+1, history.size()).clear();
+                }
+            } else if (averageFPS < 0.02f && buffer < Math.min(MAX_BUFFER, (250000f/(drawYear.getBalls().size)))) {
+                buffer += 1/deltaTime;
             }
-            if(year+ buffer < calculatedYear) {
-                calculatedYear = year+ buffer;
-                history.subList(calculatedYear+1, history.size()).clear();
+
+            if (averageFPS > 0.025f && drawBuffer > Math.min(MIN_DRAWB, 2500f/(drawYear.getBalls().size))) {
+                if(averageFPS > 0.05f) {
+                    drawBuffer -= Math.max(drawBuffer / 5, 1);
+                } else {
+                    drawBuffer--;
+                }
+            } else if (averageFPS < 0.02f && drawBuffer < Math.min(MAX_DRAWB, (250000f/(drawYear.getBalls().size)))) {
+                drawBuffer += 1/deltaTime;
             }
-        } else if (deltaTime < 0.02f && buffer < Math.min(2000, (25000f/(drawYear.getBalls().size)))) {
-            buffer += 1;
+            numberOfFrames = 0;
+            averageFPS = 0;
         }
     }
 
@@ -220,12 +241,12 @@ public class Age {
         newYear = HistoryEntry.clone(history.get(calculatedYear).getBalls());
 
         for (int i = 0; i < newYear.size; i++) {
-            if (newYear.size == 1) { newYear.get(0).act(null); }
             for (int j = i+1; j < newYear.size; j++) {
-                newYear.get(i).act(newYear.get(j));
+                newYear.get(i).act(newYear.get(j)).grow();
             }
-            if (newYear.size == i+1) { newYear.get(i).act(null); }
-            newYear.get(i).move().setProjection(newYear.get(0).getZ());
+            if (newYear.size == 1) { newYear.get(0).grow(); }
+            if (newYear.size == i+1) { newYear.get(i).grow(); }
+            newYear.get(i).move();
         }
      /*   newYear.sort(new Comparator<Ball>() {
             @Override
@@ -248,10 +269,11 @@ public class Age {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        int maxHistory = ballsTail*2;
-        if (year > maxHistory) {
+        int maxHistory = settings.getSetting(Settings.SettingsEnum.BALLSTAIL).getValue()*2;
+        if (year > maxHistory + 100) {
             int difference = year - maxHistory;
             history.subList(0, difference).clear();
+           // for(int i = 0; i < difference; i++) { history.remove(0); }
             year -= difference;
             calculatedYear -= difference;
         }
@@ -339,7 +361,7 @@ public class Age {
             if (mainEngine.newBall == null) {
                 mainEngine.newBall = ball.clicked(x, y);
                 if (mainEngine.newBall != null) {
-                    if (settings.speed !=0) {
+                    if (settings.getSetting(Settings.SettingsEnum.SPEED).getValue() !=0) {
                         removeBall(mainEngine.newBall);
                     }
                     mainEngine.newBall.setPosition(x, y);

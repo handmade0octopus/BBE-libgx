@@ -28,24 +28,6 @@ public class Settings {
 
     static Preferences prefs; // Preferences stores, saves and loads games settings
 
-    // Maximum and minimum values of settings
-    public static final float MIN_QUANT = 0,
-            MAX_QUANT = 500,
-            MIN_SIZE = 1,
-            MAX_SIZE = 50,
-            MIN_TAIL = 0,
-            MAX_TAIL = 100,
-            MIN_SPRINGINESS = 0,
-            MAX_SPRINGINESS = 110,
-            MIN_GRAVITY = -50,
-            MAX_GRAVITY = 50,
-            MIN_FORCES = -200,
-            MAX_FORCES = 200,
-            MIN_SPEED = 0,
-            MAX_SPEED = 5,
-            MIN_UNI = 1,
-            MAX_UNI = 1000;
-
 
     // Loads prefs when created.
     public Settings(MainScreen mainScreen) {
@@ -67,7 +49,7 @@ public class Settings {
         universeScale = getSetting(SettingsEnum.UNISCALE).getValue();
     }
 
-    public void action(SettingEntry settingEntry) {
+    void action(SettingEntry settingEntry) {
         if(mainEngine != null) { mainEngine.action(settingEntry); }
     }
 
@@ -143,7 +125,7 @@ public class Settings {
     }
 
     // Updates values on menu
-    public void update() {
+    private void update() {
         if (menu != null) { menu.updateValues(); }
     }
 
@@ -188,7 +170,7 @@ public class Settings {
         setUniScale(screenRatio);
     }
 
-    public void buttonDown(int keycode) {
+    void buttonDown(int keycode) {
         mainEngine.buttonDown(keycode);
     }
 

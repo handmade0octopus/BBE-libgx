@@ -124,6 +124,7 @@ public class InputHandler implements InputProcessor {
     public void drawUi() {
         // Draws whole UI
         slidingMenu.draw();
+        zoom.smoothTranslate();
     }
 
     public void update(float width, float height) {

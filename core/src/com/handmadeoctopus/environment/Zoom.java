@@ -5,17 +5,25 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
+import com.handmadeoctopus.entities.Ball;
 
 // Zoom class handles all zoom instances
 public class Zoom {
     public OrthographicCamera camera, uiCamera;
     boolean zooming = false;
 
+    // Smooth translation
+    private float targetX, targetY, targetScale=1, smoothness = 10f;
+    private boolean targetZoom = false;
+
+    // Following ball;
+    Ball followingBall;
+
     // Mix and max zoom
     static final float MIN_ZOOM = 0.01f, MAX_ZOOM = 1f;
 
     // Variables for calculating zoom
-    public float x, y, x1, y1, xP, yP, baseX = 0, baseY = 0, baseRotation = 0, z, q, maxZoom = 100;
+    public float x, y, x1, y1, xP, yP, zoom, baseX = 0, baseY = 0, baseRotation = 0, z, q, maxZoom = 100;
 
     BoundingBox left, right, top, bottom = null;
 
@@ -52,13 +60,13 @@ public class Zoom {
     float lastZoom;
 
     // Translate camera within safe boundingBox
-    public void translateSafe(float x, float y, double scale) {
+    public void translateSafe(float x, float y, float scale) {
         lastPosition.set(camera.position.x, camera.position.y, 0);
         lastZoom = camera.zoom;
         camera.translate(x, y);
         camera.update();
         ensureBounds();
-        camera.zoom /= scale;
+        camera.zoom += scale;
         camera.update();
         ensureZoom();
     }
@@ -119,6 +127,7 @@ public class Zoom {
             xP = (x+x1)/2;
             yP = (y+y1)/2;
             zooming = true;
+            zoom = camera.zoom;
         }
     }
 
@@ -126,13 +135,18 @@ public class Zoom {
     public void setZoom(float x, float y, float x1, float y1) {
         double oldDist = (Math.pow(this.x-this.x1,2) + Math.pow(this.y-this.y1,2));
         double newDist = (Math.pow(x-x1,2) + Math.pow(y-y1,2));
-        double scale = Math.sqrt(newDist / oldDist);
+        double scale = Math.sqrt(oldDist/ newDist);
         float xPnew = (x+x1)/2;
         float yPnew = (y+y1)/2;
         float xMoveBy = (xP - xPnew)*camera.zoom;
         float yMoveBy = (yPnew - yP)*camera.zoom;
 
-        translateSafe(xMoveBy, yMoveBy, scale);
+
+    //    translateSafe(xMoveBy, yMoveBy, scale);
+
+        if(xMoveBy != 0 || yMoveBy != 0 || scale != 1) {
+            setTargetZoom((camera.position.x+(3*xMoveBy)), (camera.position.y+(3*yMoveBy)), (float) (camera.zoom*(scale*scale*scale)));
+        }
 
 	/*
 	    if (x > x1) {
@@ -228,5 +242,29 @@ public class Zoom {
             camera.update();
         }
 
+    }
+
+    public void setTargetZoom(float x, float y, float scale) {
+        this.targetScale = scale;
+        this.targetX = x;
+        this.targetY = y;
+        targetZoom = true;
+    }
+
+    public void smoothTranslate() {
+        if(targetZoom) {
+            float moveX = targetX - camera.position.x;
+            float moveY =  targetY - camera.position.y;
+            float changeScale = targetScale - camera.zoom;
+      /*      if (targetScale > camera.zoom) { changeScale = 1.01f;
+            } else if(targetScale == camera.zoom) { changeScale = 1;
+            } else { changeScale = 0.99f; }*/
+            if(moveX == 0 && moveY == 0 && changeScale == 1) {
+                targetZoom = false;
+                zoom = camera.zoom;
+            } else {
+                translateSafe(moveX/smoothness, moveY/smoothness, changeScale/smoothness);
+            }
+        }
     }
 }

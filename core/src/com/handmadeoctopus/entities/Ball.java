@@ -40,7 +40,6 @@ public class Ball {
         set(radius, x, y, 0);
     }
 
-
     public Ball (Settings settings) {
         this.settings = settings;
         setBallParameters(settings.getSetting(Settings.SettingsEnum.GRAVITY).getValue(),
@@ -94,7 +93,6 @@ public class Ball {
 
     }
 
-
     // Changes colour to random
     private void randomColour() {
         clr = new Color(rnd.nextFloat(), rnd.nextFloat(), rnd.nextFloat(), 0.9f);
@@ -145,43 +143,52 @@ public class Ball {
         xMin = box.xMin;
         yMin = box.yMin;
 
-        if (gravity > Settings.MIN_GRAVITY && gravity <= Settings.MAX_GRAVITY) {
-            this.gravity = gravity/1000f;
-            this.gravitation = true;
-        }
-        else {
-            this.gravity = 0;
-            this.gravitation = false;
-        }
+        this.gravity = gravity/1000f;
+        this.gravitation = true;
 
-        if (spring > Settings.MIN_SPRINGINESS && spring <= Settings.MAX_SPRINGINESS) { this.springiness = spring/100f; }
-        else { this.springiness = 1; }
+        this.springiness = spring/100f;
 
-        if (force > Settings.MIN_FORCES && gravity <= Settings.MAX_FORCES) {
-            this.force = force/10000f;
-            this.forces = true;
-        } else {
-            this.force = 0;
-            this.forces = false;
-        }
+        this.force = force/10000f;
+        this.forces = true;
 
         this.tail = tail;
 
-        if (speed >= Settings.MIN_SPEED && speed <= Settings.MAX_SPEED) {
-            this.speed = 6;
-            randomSpeedXY();
-        } else { this.speed = 6; }
     }
 
     public void setBallParameters(Settings settings) {
         this.settings = settings;
-        setBallParameters(settings.gravity, settings.springiness, settings.ballsTail, settings.forces, settings.speed, settings.gravitation, settings.ballsForces, settings.box);
-
+        setBallParameters(settings.getSetting(Settings.SettingsEnum.GRAVITY).getValue(),
+                settings.getSetting(Settings.SettingsEnum.SPRINGINESS).getValue(),
+                settings.getSetting(Settings.SettingsEnum.BALLSTAIL).getValue(),
+                settings.getSetting(Settings.SettingsEnum.FORCES).getValue(),
+                settings.getSetting(Settings.SettingsEnum.SPEED).getValue(),
+                settings.getSetting(Settings.SettingsEnum.GRAVITY).getValueBool(),
+                settings.getSetting(Settings.SettingsEnum.FORCES).getValueBool(),
+                settings.box);
     }
 
     // Moves ball
     public Ball move() {
         gravity();
+
+        // When ball collides with box
+        if (position.x + radius + speedX > box.xMax || position.x - radius + speedX < box.xMin) {
+            speedX = -springiness * speedX;
+            if (position.x - radius < box.xMin) { position.x = box.xMin + radius; }
+            else if (position.x + radius > box.xMax) { position.x = box.xMax - radius; }
+        }
+        if (position.y + radius + speedY > box.yMax || position.y - radius + speedY < box.yMin) {
+            speedY = -springiness * speedY;
+            if (position.y - radius < box.yMin) { position.y = box.yMin + radius; }
+            else if (position.y + radius + speedY > box.yMax) { position.y = box.yMax - radius; }
+        }
+
+        if (position.z + radius + speedZ > box.zMax || position.z - radius + speedZ < box.zMin) {
+            speedZ = -springiness * speedZ;
+            if (position.z - radius < box.zMin) { position.z = box.zMin + radius; }
+            else if (position.z + radius + speedZ > box.zMax) { position.z = box.zMax - radius; }
+        }
+
         position.x += speedX;
         position.y += speedY;
         position.z += speedZ;
@@ -205,41 +212,16 @@ public class Ball {
     }
 
     // Checks if ball is hit
-    public void hit(Ball otherBall) {
-        // Boundaries
-        xMax = box.xMax;
-        yMax = box.yMax;
-        xMin = box.xMin;
-        yMin = box.yMin;
-        zMin = box.zMin;
-        zMax = box.zMax;
-
-        // When ball collides with box
-        if (position.x + radius + speedX > xMax || position.x - radius + speedX < xMin) {
-            speedX = -springiness * speedX;
-            if (position.x - radius < xMin) { position.x = xMin + radius; }
-            else if (position.x + radius > xMax) { position.x = xMax - radius; }
-        }
-        if (position.y + radius + speedY > yMax || position.y - radius + speedY < yMin) {
-            speedY = -springiness * speedY;
-            if (position.y - radius < yMin) { position.y = yMin + radius; }
-            else if (position.y + radius + speedY > yMax) { position.y = yMax - radius; }
-        }
-
-        if (position.z + radius + speedZ > zMax || position.z - radius + speedZ < zMin) {
-            speedZ = -springiness * speedZ;
-            if (position.z - radius < zMin) { position.z = zMin + radius; }
-            else if (position.z + radius + speedZ > zMax) { position.z = zMax - radius; }
-        }
-
+    public void hit(Ball otherBall, float distance, float totalRadius) {
         // Balls collide with each other
-        if (otherBall != null) {
-            double totalRadius = Math.pow(radius + otherBall.radius, 2);
-            double distSpeed = Math.pow( (position.x + speedX )
-                    - (otherBall.position.x + otherBall.speedX), 2)
-                    + Math.pow( (position.y + speedY)
-                    - (otherBall.position.y + otherBall.speedY), 2);
-            double distance = Math.pow( (this.position.x - (otherBall.position.x) ), 2.0) + Math.pow( (this.position.y) - (otherBall.position.y ), 2.0);
+
+
+            float distSpeed = ( (position.x + speedX )
+                    - (otherBall.position.x + otherBall.speedX))*( (position.x + speedX )
+                    - (otherBall.position.x + otherBall.speedX))
+                    + ( (position.y + speedY)
+                    - (otherBall.position.y + otherBall.speedY))*( (position.y + speedY)
+                    - (otherBall.position.y + otherBall.speedY));
 
             if(hits && totalRadius >= distSpeed) {
                 FloatMatrix n = new FloatMatrix(new float[][] {{position.x - otherBall.position.x, position.y - otherBall.position.y}});
@@ -248,7 +230,7 @@ public class Ball {
                 Geometry.normalize(n);
                 float a1 = v1.dot(n);
                 float a2 = v2.dot(n);
-                float optimizedP = (float) (2.0 * (a1 - a2)) / (mass + otherBall.mass);
+                float optimizedP = (2.0f * (a1 - a2)) / (mass + otherBall.mass);
 
                 FloatMatrix v1p = v1.sub(n.mul(optimizedP*otherBall.mass));
                 FloatMatrix v2p = v2.add(n.mul(optimizedP*mass));
@@ -258,7 +240,7 @@ public class Ball {
                 otherBall.speedX = v2p.get(0);
                 otherBall.speedY = v2p.get(1);
 
-                if (totalRadius >= distance) {
+                while (totalRadius >= distance) {
                     float move = 1f;
                     if ((this.position.x) - (otherBall.position.x) > 0) {
                         this.position.x += move;
@@ -274,22 +256,44 @@ public class Ball {
                         this.position.y -= move;
                         otherBall.position.y += move;
                     }
-                }
-                slow();
-                otherBall.slow();
-            }
 
-            if (forces && totalRadius + 1 < distance) {
-                FloatMatrix n = new FloatMatrix(new float[][]{{position.x - otherBall.position.x, position.y - otherBall.position.y}});
-                Geometry.normalize(n);
-                double force =  ((mass * otherBall.mass)) / (distance);
-                FloatMatrix a1 = n.mul((float) (-1.0*(force / mass)));
-                FloatMatrix a2 = n.mul((float) (force / otherBall.mass));
-                speedX += this.force*(a1.get(0));
-                speedY += this.force*(a1.get(1));
-                otherBall.speedX += this.force*(a2.get(0));
-                otherBall.speedY += this.force*(a2.get(1));
-            }
+                    distance = (( (this.position.x - (otherBall.position.x) ))*( (this.position.x - (otherBall.position.x) ))
+                            + ( (this.position.y) - (otherBall.position.y ))*( (this.position.y) - (otherBall.position.y )));
+                    totalRadius = (radius + otherBall.radius)*(radius + otherBall.radius);
+
+                    }
+                    slow();
+                    otherBall.slow();
+                }
+
+
+
+    }
+
+    // Performs all ball actions
+    public Ball act(Ball otherBall) {
+        if(otherBall != null) {
+            float distance = (( (this.position.x - (otherBall.position.x) ))*( (this.position.x - (otherBall.position.x) ))
+                    + ( (this.position.y) - (otherBall.position.y ))*( (this.position.y) - (otherBall.position.y )));
+            float totalRadius = (radius + otherBall.radius)*(radius + otherBall.radius);
+
+            hit(otherBall, distance, totalRadius);
+            forces(otherBall, distance, totalRadius);
+            return this;
+        } else { return this; }
+    }
+
+    private void forces(Ball otherBall, float distance, float totalRadius) {
+        if (forces && totalRadius + 1 < distance) {
+            FloatMatrix n = new FloatMatrix(new float[][]{{position.x - otherBall.position.x, position.y - otherBall.position.y}});
+            Geometry.normalize(n);
+            float force =  ((mass * otherBall.mass)) / (distance);
+            FloatMatrix a1 = n.mul( (-1f*(force / mass)));
+            FloatMatrix a2 = n.mul( (force / otherBall.mass));
+            speedX += this.force*(a1.get(0));
+            speedY += this.force*(a1.get(1));
+            otherBall.speedX += this.force*(a2.get(0));
+            otherBall.speedY += this.force*(a2.get(1));
         }
     }
 
@@ -305,7 +309,8 @@ public class Ball {
     }
 
     public void grow() {
-        if (grow && Math.abs(x - x1) < 9*settings.zoom.camera.zoom && Math.abs(y - y1) < 9*settings.zoom.camera.zoom) {
+        if (grow && Math.abs(x - x1) < Math.max(radius, 12*settings.zoom.camera.zoom)
+                && Math.abs(y - y1) < Math.max(radius, 12*settings.zoom.camera.zoom)) {
             radius += 0.1*settings.zoom.camera.zoom;
         }
         updateMass();
@@ -313,17 +318,34 @@ public class Ball {
 
     // Performs gravity decrease in speedY
     public void gravity() {
-        if (gravitation && y - radius > yMin) { speedY -= gravity; }
+        if (gravitation && position.y - radius > yMin) { speedY -= gravity; }
     }
+
 
     // Sets ball speed by new X, Y
     public void setSpeedByPosition(float x1, float y1) {
         this.x1 = x1;
         this.y1 = y1;
-        if (Math.abs(x - x1) < radius/3 ) { speedX = 0; }
-        else { speedX = (x - x1) / 50f; }
-        if (Math.abs(y - y1) < radius/3) { speedY = 0; }
-        else { speedY = (y - y1) / 50f; }
+
+
+        if (Math.abs(position.x - x1) < radius ) { speedX = 0; }
+        else {
+            if(position.x > x1) {
+                speedX = (position.x - x1 - radius) / 50f;
+            } else {
+                speedX = (position.x - x1 + radius) / 50f;
+            }
+        }
+        if (Math.abs(y - y1) < radius) { speedY = 0; }
+        else {
+            if(position.y > y1) {
+                speedY = (position.y - y1 - radius) / 50f;
+            } else {
+                speedY = (position.y - y1 + radius) / 50f;
+            }
+        }
+
+
         if (settings.getSetting(Settings.SettingsEnum.SPEED).getValue() == 0) {
             settings.age.flush();
         }
@@ -361,11 +383,7 @@ public class Ball {
         batch.draw(texture, position.x-radius, position.y-radius, 2*radius, 2*radius);
     }
 
-    // Performs all ball actions
-    public void act(Ball otherBall) {
-        grow();
-        hit(otherBall);
-    }
+
 
     // Update mass from the radius.
     public void updateMass() {
@@ -379,7 +397,7 @@ public class Ball {
             batch.setColor(new Color(clr.r, clr.g, clr.b, alpha));
             if (d < historyEntries.get(i).getBalls().size) {
                 Ball ball = historyEntries.get(i).getBalls().get(d);
-                batch.draw(texture, ball.position.x-radius, ball.position.y-radius, 2*ball.radius, 2*ball.radius);
+                batch.draw(texture, ball.position.x-alpha*radius, ball.position.y-alpha*radius, alpha*2*ball.radius, alpha*2*ball.radius);
             }
         }
     }
