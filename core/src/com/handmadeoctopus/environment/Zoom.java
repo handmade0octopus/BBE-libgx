@@ -145,7 +145,8 @@ public class Zoom {
     //    translateSafe(xMoveBy, yMoveBy, scale);
 
         if(xMoveBy != 0 || yMoveBy != 0 || scale != 1) {
-            setTargetZoom((camera.position.x+(3*xMoveBy)), (camera.position.y+(3*yMoveBy)), (float) (camera.zoom*(scale*scale*scale)));
+            setTargetZoom((camera.position.x+(3*xMoveBy)),
+                    (camera.position.y+(3*yMoveBy)), (float) (camera.zoom*(scale*scale*scale)));
         }
 
 	/*
@@ -234,11 +235,11 @@ public class Zoom {
 
         if(true) {
             camera.update();
-            float zoomScaler = Math.max(25, 1/camera.zoom);
-            translateSafe(moveX, moveY, (zoomScaler-amount)/(zoomScaler));
+            float zoomScaler = 0.1f*camera.zoom;
+            translateSafe(moveX, moveY, amount*(zoomScaler));
             camera.update();
-            ensureZoom();
-            checkCamera();
+ /*           ensureZoom();
+            checkCamera();*/
             camera.update();
         }
 

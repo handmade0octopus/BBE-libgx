@@ -2,7 +2,7 @@ package com.handmadeoctopus.entities;
 
 // Class that keep position of balls
 public class Position {
-    float x, y, z;
+    float x, y, z, rotation;
 
     public Position(float x, float y, float z) {
         set(x, y, z);
@@ -19,9 +19,8 @@ public class Position {
     }
 
     public void set(Position position) {
-        this.x = position.x;
-        this.y = position.y;
-        this.z = position.z;
+        set(position.x, position.y, position.z);
     }
+
 
 }

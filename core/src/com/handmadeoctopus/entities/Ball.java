@@ -20,10 +20,10 @@ import java.util.Random;
 public class Ball {
     // Position, size and speed of ball//
     Position position;
-    public float radius, mass, x, y, speedX, speedY, speedZ, xMin, xMax, yMin, yMax, zMin, zMax, x1, y1, projection;
+    public float radius, mass, speedX, speedY, speedZ, xMin, xMax, yMin, yMax, zMin, zMax, x1, y1, projection, rotation;
     public float gravity = 0, force = 0, springiness = 1, speed = 6, massScale = 1;
     public Texture texture = MainEngine.TEXTURE;
-    public Boolean grow = false, gravitation = true, hits = true, forces = true, touchable = false;
+    public Boolean grow = false, gravitation = true, hits = true, forces = true, touchable = false, moving = true;
     Settings settings;
     Box box;
     Random rnd = new Random();
@@ -35,7 +35,6 @@ public class Ball {
     // Constructor with random values of color and speed
     public Ball(float radius, float x, float y, Settings settings) {
         this.settings = settings;
-        randomSpeedXY();
         randomColour();
         set(radius, x, y, 0);
     }
@@ -64,12 +63,18 @@ public class Ball {
     }
 
     public Ball (Ball ball) {
+        copyBall(ball, true);
+    }
+
+    private void copyBall(Ball ball, boolean newPosition) {
         radius = ball.radius;
         mass = ball.mass;
-        this.settings = ball.settings;
-        x = ball.x;
-        y = ball.y;
-        position = new Position(ball.position);
+        settings = ball.settings;
+        if (newPosition){
+            position = new Position(ball.position);
+        } else {
+            position.set(ball.position);
+        }
         speedX = ball.speedX;
         speedY = ball.speedY;
         speedZ = ball.speedZ;
@@ -90,7 +95,7 @@ public class Ball {
         box = ball.box;
         clr = ball.clr;
         tail = ball.tail;
-
+        updateRotation();
     }
 
     // Changes colour to random
@@ -110,6 +115,7 @@ public class Ball {
         speedX = sX;
         speedY = sY;
         speedZ = sZ;
+        updateRotation();
     }
 
     // Sets all ball values
@@ -117,13 +123,12 @@ public class Ball {
         this.radius = radius;
         updateMass();
         this.position = new Position(x, y, z);
-        this.x = x;
-        this.y = y;
         this.clr = clr;
         this.speedX = speedX;
         this.speedY = speedY;
         this.speedZ = speedZ;
         touchable = true;
+        updateRotation();
     }
 
     // Sets radius, x and y
@@ -152,7 +157,7 @@ public class Ball {
         this.forces = true;
 
         this.tail = tail;
-
+        updateRotation();
     }
 
     public void setBallParameters(Settings settings) {
@@ -169,30 +174,48 @@ public class Ball {
 
     // Moves ball
     public Ball move() {
-        gravity();
+        if(moving) {
+            gravity();
 
+            checkBoxBoundaries();
+
+            position.x += speedX;
+            position.y += speedY;
+            position.z += speedZ;
+        }
+
+        return this;
+    }
+
+    private void checkBoxBoundaries() {
         // When ball collides with box
         if (position.x + radius + speedX > box.xMax || position.x - radius + speedX < box.xMin) {
             speedX = -springiness * speedX;
             if (position.x - radius < box.xMin) { position.x = box.xMin + radius; }
             else if (position.x + radius > box.xMax) { position.x = box.xMax - radius; }
+
         }
         if (position.y + radius + speedY > box.yMax || position.y - radius + speedY < box.yMin) {
             speedY = -springiness * speedY;
             if (position.y - radius < box.yMin) { position.y = box.yMin + radius; }
             else if (position.y + radius + speedY > box.yMax) { position.y = box.yMax - radius; }
+            updateRotation();
         }
-
         if (position.z + radius + speedZ > box.zMax || position.z - radius + speedZ < box.zMin) {
             speedZ = -springiness * speedZ;
             if (position.z - radius < box.zMin) { position.z = box.zMin + radius; }
             else if (position.z + radius + speedZ > box.zMax) { position.z = box.zMax - radius; }
+            updateRotation();
         }
+    }
 
-        position.x += speedX;
-        position.y += speedY;
-        position.z += speedZ;
-        return this;
+    private void updateRotation() {
+        rotation = (float) Math.toDegrees(Math.atan2(speedX, speedY));
+        if(speedX >= 0) {
+            rotation = -rotation;
+        } else {
+            rotation = (float) -(360f+ rotation);
+        }
     }
 
     // Slows ball if you need to slow it only a little, higher number = less slow, 1 = no change
@@ -214,8 +237,6 @@ public class Ball {
     // Checks if ball is hit
     public void hit(Ball otherBall, float distance, float totalRadius) {
         // Balls collide with each other
-
-
             float distSpeed = ( (position.x + speedX )
                     - (otherBall.position.x + otherBall.speedX))*( (position.x + speedX )
                     - (otherBall.position.x + otherBall.speedX))
@@ -264,6 +285,8 @@ public class Ball {
                     }
                     slow();
                     otherBall.slow();
+                    updateRotation();
+                    otherBall.updateRotation();
                 }
 
 
@@ -294,12 +317,15 @@ public class Ball {
             speedY += this.force*(a1.get(1));
             otherBall.speedX += this.force*(a2.get(0));
             otherBall.speedY += this.force*(a2.get(1));
+            updateRotation();
+            otherBall.updateRotation();
         }
     }
 
     // Growing functions to be called from outside to change ball size.
     public void startGrowing() {
         grow = true;
+        growing = true;
     }
 
     public void stopGrowing() {
@@ -308,9 +334,10 @@ public class Ball {
         updateMass();
     }
 
+    boolean growing;
+
     public void grow() {
-        if (grow && Math.abs(x - x1) < Math.max(radius, 12*settings.zoom.camera.zoom)
-                && Math.abs(y - y1) < Math.max(radius, 12*settings.zoom.camera.zoom)) {
+        if (grow && growing) {
             radius += 0.1*settings.zoom.camera.zoom;
         }
         updateMass();
@@ -321,14 +348,30 @@ public class Ball {
         if (gravitation && position.y - radius > yMin) { speedY -= gravity; }
     }
 
-
     // Sets ball speed by new X, Y
     public void setSpeedByPosition(float x1, float y1) {
         this.x1 = x1;
         this.y1 = y1;
 
+        float distance = (( (this.position.x - x1 ))*( (this.position.x - x1 ))
+                + ( (this.position.y) - y1)*( (this.position.y) - (y1 )));
+        float totalRadius = radius*radius > 81*settings.zoom.camera.zoom ? (radius)*(radius) : settings.zoom.camera.zoom;
 
-        if (Math.abs(position.x - x1) < radius ) { speedX = 0; }
+
+        if(totalRadius >= distance) {
+            speedX = 0;
+            speedY = 0;
+            growing = true;
+        } else {
+            FloatMatrix n = new FloatMatrix(new float[][]{{position.x - x1, position.y - y1}});
+            Geometry.normalize(n);
+            FloatMatrix a = n.mul((float) (Math.sqrt((distance) - totalRadius))/50f);
+            speedX = a.get(0);
+            speedY = a.get(1);
+            growing = false;
+        }
+
+    /*    if (Math.abs(position.x - x1) < radius ) { speedX = 0; }
         else {
             if(position.x > x1) {
                 speedX = (position.x - x1 - radius) / 50f;
@@ -336,25 +379,24 @@ public class Ball {
                 speedX = (position.x - x1 + radius) / 50f;
             }
         }
-        if (Math.abs(y - y1) < radius) { speedY = 0; }
+        if (Math.abs(position.y - y1) < radius) { speedY = 0; }
         else {
             if(position.y > y1) {
                 speedY = (position.y - y1 - radius) / 50f;
             } else {
                 speedY = (position.y - y1 + radius) / 50f;
             }
-        }
+        }*/
 
 
         if (settings.getSetting(Settings.SettingsEnum.SPEED).getValue() == 0) {
             settings.age.flush();
         }
+        updateRotation();
     }
 
     // Sets new position for ball
     public void setPosition(float x, float y) {
-        this.x = x;
-        this.y = y;
         this.x1 = x;
         this.y1 = y;
         position = new Position(x, y, 0);
@@ -369,9 +411,14 @@ public class Ball {
         return null;
     }
 
+
+    // Update mass from the radius.
+    public void updateMass() {
+        mass = radius*radius*radius * 3.14f * massScale;
+    }
+
     // Draws ball
     public void draw(ShapeRenderer renderer) {
-        move();
         renderer.setColor(clr);
         renderer.circle(position.x, position.y, radius, 180);
     }
@@ -380,14 +427,8 @@ public class Ball {
     public void draw(SpriteBatch batch) {
 
         batch.setColor(this.clr.r, this.clr.g, this.clr.b, this.clr.a);
-        batch.draw(texture, position.x-radius, position.y-radius, 2*radius, 2*radius);
-    }
-
-
-
-    // Update mass from the radius.
-    public void updateMass() {
-        mass = radius*radius*radius * 3.14f * massScale;
+        batch.draw(texture, position.x-radius, position.y-radius, radius, radius, 2*radius, 2*radius, 1, 1, rotation, 0, 0, texture.getWidth(), texture.getHeight(), false, false);
+      //  batch.draw(texture, position.x-radius, position.y-radius, 2*radius, 2*radius);
     }
 
     // Draws tail for ball from List of history entries, d is this ball ID.

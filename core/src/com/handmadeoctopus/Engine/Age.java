@@ -26,7 +26,7 @@ public class Age {
     private int numberOfFrames = 0;
     public HistoryEntry drawYear;
     private Array<Ball> newYear, balls;
-    private List<HistoryEntry> history;
+    private List<HistoryEntry> history, tempPath;
     private boolean sameFrame = false;
     Settings settings;
     MainEngine mainEngine;
@@ -161,7 +161,12 @@ public class Age {
             if (year > 1) {
                 balls.get(i).drawTail(batch, history.subList(year-settings.getSetting(Settings.SettingsEnum.BALLSTAIL).getValue()*2 < 1 ? 0 : year-settings.getSetting(Settings.SettingsEnum.BALLSTAIL).getValue()*2 - 1, year - 1), i);
             }
-            balls.get(i).drawPath(batch, history.subList(year, Math.min(year+drawBuffer, calculatedYear)), i);
+            if (year+drawBuffer > calculatedYear && tempPath != null) {
+                balls.get(i).drawPath(batch, tempPath, i);
+            } else {
+                balls.get(i).drawPath(batch, history.subList(year, Math.min(year+drawBuffer, history.size())), i);
+            }
+
             balls.get(i).draw(batch);
         }
         adjustBuffer();
@@ -256,11 +261,17 @@ public class Age {
         }); */
 
         calculatedYear++;
+        if(calculatedYear >= year + drawBuffer) {
+            history.subList(calculatedYear, history.size()).clear();
+            tempPath = null;
+        }
         history.add(calculatedYear, new HistoryEntry(newYear));
+
         sem.release();
 
         eraseHistory();
     }
+
 
     // Erases history so it doesn't take much space.
     private void eraseHistory() {
@@ -268,6 +279,9 @@ public class Age {
             sem.acquire();
         } catch (InterruptedException e) {
             e.printStackTrace();
+        }
+        if (calculatedYear < history.size() && calculatedYear >= year+drawBuffer) {
+            history.subList(calculatedYear+1, history.size()).clear();
         }
         int maxHistory = settings.getSetting(Settings.SettingsEnum.BALLSTAIL).getValue()*2;
         if (year > maxHistory + 100) {
@@ -348,10 +362,19 @@ public class Age {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        if(calculatedYear > year) {
-            calculatedYear = year;
-            history.subList(year+1, history.size()).clear();
+        if(year+drawBuffer < calculatedYear){
+            tempPath = history.subList(year+1, year+drawBuffer);
+            List<HistoryEntry> flushHistory = history.subList(year+1, year+drawBuffer);
+            tempPath = new ArrayList<HistoryEntry>();
+            for(HistoryEntry hist : flushHistory) {
+                tempPath.add(new HistoryEntry(HistoryEntry.clone(hist.getBalls())));
+            }
+            if(calculatedYear > year) {
+                calculatedYear = year;
+                history.subList(year+1, history.size()).clear();
+            }
         }
+
         sem.release();
     }
 
@@ -372,7 +395,6 @@ public class Age {
 
         if (mainEngine.newBall == null) {
             mainEngine.newBall = new Ball(1*settings.zoom.camera.zoom, x, y, settings);
-            mainEngine.newBall.setPosition(x,y);
             mainEngine.newBall.setBallParameters(settings);
             mainEngine.newBall.startGrowing();
             if(settings.getSetting(Settings.SettingsEnum.SPEED).getValue() == 0) { addBall(mainEngine.newBall); }

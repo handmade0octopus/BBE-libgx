@@ -27,7 +27,7 @@ public class MainEngine {
     private Age age;
     private HashMap<Settings.SettingsEnum, Integer> settingMap;
 
-    public static final Pixmap PIXMAP = new Pixmap(Gdx.files.internal("circle.png"));
+    public static final Pixmap PIXMAP = new Pixmap(Gdx.files.internal("spaceship.png"));
     public static final Texture TEXTURE = new Texture(PIXMAP, true);
 
     // New ball input
