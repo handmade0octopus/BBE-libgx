@@ -100,7 +100,7 @@ public class Ball {
 
     // Changes colour to random
     private void randomColour() {
-        clr = new Color(rnd.nextFloat(), rnd.nextFloat(), rnd.nextFloat(), 0.9f);
+        clr = new Color(rnd.nextFloat(), rnd.nextFloat(), rnd.nextFloat(), 1f);
     }
 
     // Changes speed to random
@@ -283,6 +283,7 @@ public class Ball {
                     totalRadius = (radius + otherBall.radius)*(radius + otherBall.radius);
 
                     }
+
                     slow();
                     otherBall.slow();
                     updateRotation();
@@ -307,7 +308,7 @@ public class Ball {
     }
 
     private void forces(Ball otherBall, float distance, float totalRadius) {
-        if (forces && totalRadius + 1 < distance) {
+        if (forces && totalRadius + 1f < distance) {
             FloatMatrix n = new FloatMatrix(new float[][]{{position.x - otherBall.position.x, position.y - otherBall.position.y}});
             Geometry.normalize(n);
             float force =  ((mass * otherBall.mass)) / (distance);
@@ -338,7 +339,7 @@ public class Ball {
 
     public void grow() {
         if (grow && growing) {
-            radius += 0.1*settings.zoom.camera.zoom;
+            radius += 0.5*settings.zoom.camera.zoom;
         }
         updateMass();
     }
@@ -443,6 +444,23 @@ public class Ball {
         }
     }
 
+    public void drawTail(ShapeRenderer renderer, List<HistoryEntry> historyEntries, int d) {
+        for (int i = 0; i < historyEntries.size(); i++) {
+            if (d < historyEntries.get(i).getBalls().size && i + 1 < historyEntries.size() && d < historyEntries.get(i+1).getBalls().size ) {
+                float alpha = clr.a*((1f+i)/historyEntries.size());
+                renderer.setColor(new Color(clr.r, clr.g, clr.b, alpha));
+                Ball ball = historyEntries.get(i).getBalls().get(d);
+        //      renderer.circle(ball.position.x, ball.position.y, ball.radius, 180);
+                Ball ball2 = historyEntries.get(i + 1).getBalls().get(d);
+                float angle = (float) Math.toDegrees(Math.atan((ball.position.y - ball2.position.y) / (ball.position.x - ball2.position.x)));
+                float width = (float) Math.sqrt(Math.pow(ball.position.x - ball2.position.x, 2) + Math.pow(ball.position.y - ball2.position.y, 2));
+                renderer.rect((ball.position.x + ball2.position.x) / 2 - (width / 2),
+                            (ball.position.y + ball2.position.y) / 2 - settings.zoom.camera.zoom, (width / 2), settings.zoom.camera.zoom, width,
+                            settings.zoom.camera.zoom * 2, 1f, 1f, angle);
+            }
+        }
+    }
+
     // Draws path in front of ball
     public void drawPath(SpriteBatch batch, List<HistoryEntry> historyEntries, int d) {
         for (int i = historyEntries.size()-1; i >= 0; i--) {
@@ -452,6 +470,27 @@ public class Ball {
                 Ball ball = historyEntries.get(i).getBalls().get(d);
                 batch.draw(texture, ball.position.x-0.5f*settings.zoom.camera.zoom, ball.position.y-0.5f*settings.zoom.camera.zoom, settings.zoom.camera.zoom, settings.zoom.camera.zoom);
             }
+        }
+    }
+
+    public void drawPath(ShapeRenderer renderer, List<HistoryEntry> historyEntries, int d) {
+        for (int i = historyEntries.size()-1; i >= 0; i--) {
+            float alpha = clr.a*(((historyEntries.size()-i/1f)/historyEntries.size()));
+            renderer.setColor(new Color(clr.r, clr.g, clr.b, alpha));
+            if (d < historyEntries.get(i).getBalls().size) {
+                Ball ball = historyEntries.get(i).getBalls().get(d);
+         //     renderer.circle(ball.position.x, ball.position.y, settings.zoom.camera.zoom, 180);
+                if (i > 0) {
+                    Ball ball2 = historyEntries.get(i-1).getBalls().get(d);
+                    float angle = (float) Math.toDegrees(Math.atan((ball.position.y - ball2.position.y)/(ball.position.x - ball2.position.x)));
+                    float width = (float) Math.sqrt(Math.pow(ball.position.x - ball2.position.x, 2)+Math.pow(ball.position.y - ball2.position.y, 2));
+                    renderer.rect((ball.position.x + ball2.position.x)/2 - (width/2),
+                            (ball.position.y + ball2.position.y)/2 - settings.zoom.camera.zoom, (width/2), settings.zoom.camera.zoom, width,
+                            settings.zoom.camera.zoom*2,  1f, 1f, angle );
+                }
+
+            }
+
         }
     }
 

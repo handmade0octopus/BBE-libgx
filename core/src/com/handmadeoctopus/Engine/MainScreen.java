@@ -5,6 +5,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 
@@ -29,6 +30,8 @@ public class MainScreen implements Screen {
     Box box; // Rectangle where our objects will collide.
 
     Zoom zoom; // Zoom class which helps us handle UI.
+
+    FrameBuffer buffer;
 
 
     private InputHandler handler; // Our input handler, handles all actions.
@@ -64,6 +67,7 @@ public class MainScreen implements Screen {
         batch = new SpriteBatch();
         batchUi = new SpriteBatch();
         renderer = new ShapeRenderer();
+        buffer = new FrameBuffer(Pixmap.Format.RGB565, (int) width, (int) height, false);
 
         // Setting up stage which is extended to uiCamera.
         stage = new Stage(new ExtendViewport(width, height, uiCamera));
@@ -95,6 +99,8 @@ public class MainScreen implements Screen {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         Gdx.gl.glEnable(GL20.GL_BLEND);
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+        Gdx.gl.glBlendEquation(GL20.GL_FUNC_ADD);
+
         camera.update();
         uiCamera.update();
 
@@ -104,7 +110,11 @@ public class MainScreen implements Screen {
         renderer.setProjectionMatrix(batch.getProjectionMatrix());
 
 
+
+
         draw();
+
+
         Gdx.gl.glDisable(GL20.GL_BLEND);
     }
 
@@ -113,14 +123,16 @@ public class MainScreen implements Screen {
         renderer.begin(ShapeRenderer.ShapeType.Filled);
 
 
+        mainEngine.drawBalls(renderer);
         box.draw(renderer);
 
         renderer.end();
 
+        /*
         batch.begin();
         mainEngine.drawBalls(batch);
         batch.end();
-
+*/
         batchUi.begin();
         handler.drawUi();
         batchUi.end();

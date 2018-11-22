@@ -79,7 +79,7 @@ public class MainEngine {
     }
 
     // Draws all balls and performs actions on them
-    public void drawBalls(ShapeRenderer renderer) {
+  /*  public void drawBalls(ShapeRenderer renderer) {
         if (balls != null) {
             for (int i = 0; i < balls.size; i++) {
                 if (balls.size == 1) { balls.get(0).act(null); }
@@ -92,9 +92,14 @@ public class MainEngine {
         }
     }
 
+    */
     // Draws all balls and performs actions on them BATCH
     public void drawBalls(SpriteBatch batch) {
         age.drawCurrentYear(batch);
+    }
+
+    public void drawBalls(ShapeRenderer renderer) {
+        age.drawCurrentYear(renderer);
     }
 
     // Updates balls after value is changed

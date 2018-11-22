@@ -5,6 +5,7 @@ package com.handmadeoctopus.Engine;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.utils.Array;
 import com.handmadeoctopus.entities.Ball;
 
@@ -21,7 +22,7 @@ public class Age {
 
     public int buffer = 300;
     private int year, calculatedYear, difference, lastSpeed = 1, drawBuffer = 50;
-    private final int MIN_BUFFER = 50, MAX_BUFFER = 3000, MIN_DRAWB = 0, MAX_DRAWB = 3000;
+    private final int MIN_BUFFER = 10, MAX_BUFFER = 3000, MIN_DRAWB = 0, MAX_DRAWB = 3000;
     private float averageFPS = 0;
     private int numberOfFrames = 0;
     public HistoryEntry drawYear;
@@ -158,8 +159,39 @@ public class Age {
    //     writer.println(drawYear.getYear());
         balls = drawYear.getBalls();
         for (int i = 0; i < balls.size; i++) {
-            if (year > 1) {
-                balls.get(i).drawTail(batch, history.subList(year-settings.getSetting(Settings.SettingsEnum.BALLSTAIL).getValue()*2 < 1 ? 0 : year-settings.getSetting(Settings.SettingsEnum.BALLSTAIL).getValue()*2 - 1, year - 1), i);
+            if (year > 1  ) {
+                balls.get(i).drawTail(batch, history.subList(year-settings.getSetting(Settings.SettingsEnum.BALLSTAIL).getValue()*2 < 1 ? 0 : year-settings.getSetting(Settings.SettingsEnum.BALLSTAIL).getValue()*2 - 1, year), i);
+            }
+            if (year+drawBuffer > calculatedYear && tempPath != null) {
+                balls.get(i).drawPath(batch, tempPath, i);
+            } else {
+                balls.get(i).drawPath(batch, history.subList(year, Math.min(year+drawBuffer, history.size())), i);
+            }
+
+            balls.get(i).draw(batch);
+        }
+        adjustBuffer();
+        sem.release();
+        if(mainEngine.newBall != null) {
+            mainEngine.newBall.grow();
+            mainEngine.newBall.draw(batch);
+        }
+        addYear(year + buffer < calculatedYear ? 0 : settings.getSetting(Settings.SettingsEnum.SPEED).getValue());
+    }
+
+    public void drawCurrentYear(ShapeRenderer batch) {
+        try {
+            sem.acquire();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        //     writer.println(drawYear.getYear());
+        balls = drawYear.getBalls();
+        for (int i = 0; i < balls.size; i++) {
+            if (year > 1 && settings.getSetting(Settings.SettingsEnum.BALLSTAIL).getValue() > 0) {
+                balls.get(i).drawTail(batch,
+                        history.subList(year-settings.getSetting(Settings.SettingsEnum.BALLSTAIL).getValue()*2 < 1 ? 0 : year-settings.getSetting(Settings.SettingsEnum.BALLSTAIL).getValue()*2, year+1 > calculatedYear ? year-1 : year + 1), i);
             }
             if (year+drawBuffer > calculatedYear && tempPath != null) {
                 balls.get(i).drawPath(batch, tempPath, i);
@@ -363,8 +395,8 @@ public class Age {
             e.printStackTrace();
         }
         if(year+drawBuffer < calculatedYear){
-            tempPath = history.subList(year+1, year+drawBuffer);
-            List<HistoryEntry> flushHistory = history.subList(year+1, year+drawBuffer);
+            tempPath = history.subList(year, year+drawBuffer);
+            List<HistoryEntry> flushHistory = history.subList(year, year+drawBuffer);
             tempPath = new ArrayList<HistoryEntry>();
             for(HistoryEntry hist : flushHistory) {
                 tempPath.add(new HistoryEntry(HistoryEntry.clone(hist.getBalls())));
@@ -406,7 +438,7 @@ public class Age {
             return false;
         }
 
-      //  flush();
+        flush();
         return true;
     }
 

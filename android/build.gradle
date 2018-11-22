@@ -1,5 +1,5 @@
 android {
-    buildToolsVersion "23.0.3"
+    buildToolsVersion '25.0.0'
     compileSdkVersion 23
     sourceSets {
         main {
@@ -12,7 +12,7 @@ android {
             jniLibs.srcDirs = ['libs']
         }
 
-        instrumentTest.setRoot('tests')
+        androidTest.setRoot('tests')
     }
     defaultConfig {
         applicationId "com.handmadeoctopus"
@@ -64,8 +64,9 @@ task run(type: Exec) {
         path = "$System.env.ANDROID_HOME"
     }
 
-    def adb = path + "/platform-tools/adb"
-    commandLine "$adb", 'shell', 'am', 'start', '-n', 'com.handmadeoctopus/com.handmadeoctopus.AndroidLauncher'
+    def adb = path + "/platform-tools/adb.exe"
+    commandLine "$adb", 'shell', 'am', 'start', '-n', 'com.handmadeoctopus.AndroidLauncher'
+
 }
 // sets up the Android Eclipse project, using the old Ant based build.
 eclipse {

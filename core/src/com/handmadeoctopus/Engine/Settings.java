@@ -184,7 +184,7 @@ public class Settings {
         SPRINGINESS("SPRINGINESS %", 0, 100, 110, true, 4),
         GRAVITY("GRAVITY %", -100, 0, 100, true, 5),
         FORCES("FORCES %", -200, 10, 200, true, 6),
-        SPEED("SPEED", 0, 1, 5, false, 7),
+        SPEED("SPEED", 0, 1, 500, false, 7),
         UNISCALE("SCALE OF UNIVERSE", 1, 10, 1000, true, 8),
         RELOAD("RELOAD", 0, 0, 0, true, 9);
 
