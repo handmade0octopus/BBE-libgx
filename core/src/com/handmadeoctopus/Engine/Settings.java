@@ -34,7 +34,6 @@ public class Settings {
     public Settings(MainScreen mainScreen) {
         this.mainScreen = mainScreen;
         prefs = Gdx.app.getPreferences("GAMEPREFS");
-        load();
     }
 
     // Sets menu on or off if necessary.
