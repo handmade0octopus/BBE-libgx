@@ -21,6 +21,14 @@ task dist(type: Jar) {
     }
 }
 
+task exportJar(type: Copy) {
+
+    def fromDir = rootProject.file("app/build/myFile.jar")
+    def toDir = rootProject.file("app/destination")
+    from(fromDir)
+    into(toDir)
+}
+
 dist.dependsOn classes
 eclipse {
     project {

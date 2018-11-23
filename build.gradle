@@ -9,12 +9,14 @@ buildscript {
     dependencies {
         classpath 'de.richsource.gradle.plugins:gwt-gradle-plugin:0.6'
         classpath 'com.android.tools.build:gradle:2.3.3'
+        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.4'
     }
 }
 
 allprojects {
     apply plugin: "eclipse"
     apply plugin: "idea"
+    apply plugin: 'com.github.johnrengelman.shadow'
 
     version = '1.0'
     ext {
@@ -44,8 +46,10 @@ project(":desktop") {
         compile "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
     }
 
-    jar {
-
+    jar{
+        manifest{
+            attributes('Main-Class': 'com.handmadeoctopus.desktop.DesktopLauncher')
+        }
     }
 }
 
