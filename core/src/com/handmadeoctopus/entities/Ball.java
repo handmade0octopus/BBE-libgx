@@ -256,26 +256,50 @@ public class Ball {
                 FloatMatrix v1p = v1.sub(n.mul(optimizedP*otherBall.mass));
                 FloatMatrix v2p = v2.add(n.mul(optimizedP*mass));
 
-                speedX = v1p.get(0);
-                speedY = v1p.get(1);
-                otherBall.speedX = v2p.get(0);
-                otherBall.speedY = v2p.get(1);
 
-                while (totalRadius >= distance) {
+                if(mass*1000 < otherBall.mass) {
+                    speedX = v1p.get(0);
+                    speedY = v1p.get(1);
+                } else if(mass > otherBall.mass*1000) {
+                    otherBall.speedX = v2p.get(0);
+                    otherBall.speedY = v2p.get(1);
+                } else {
+                    speedX = v1p.get(0);
+                    speedY = v1p.get(1);
+                    otherBall.speedX = v2p.get(0);
+                    otherBall.speedY = v2p.get(1);
+                }
+
+
+
+                while (totalRadius > distance) {
                     float move = 1f;
                     if ((this.position.x) - (otherBall.position.x) > 0) {
-                        this.position.x += move;
-                        otherBall.position.x -= move;
+                        if(mass < otherBall.mass) {
+                            this.position.x += move;
+                        } else {
+                            otherBall.position.x -= move;
+                        }
+
                     } else if ((this.position.x) - (otherBall.position.x) < 0) {
-                        this.position.x -= move;
-                        otherBall.position.x += move;
+                        if(mass < otherBall.mass) {
+                            this.position.x -= move;
+                        } else {
+                            otherBall.position.x += move;
+                        }
                     }
                     if ((this.position.y) - (otherBall.position.y) > 0) {
-                        this.position.y += move;
-                        otherBall.position.y -= move;
+                        if(mass < otherBall.mass) {
+                            this.position.y += move;
+                        } else {
+                            otherBall.position.y -= move;
+                        }
                     } else if ((this.position.y) - (otherBall.position.y) < 0) {
-                        this.position.y -= move;
-                        otherBall.position.y += move;
+                        if(mass < otherBall.mass) {
+                            this.position.y -= move;
+                        } else {
+                            otherBall.position.y += move;
+                        }
                     }
 
                     distance = (( (this.position.x - (otherBall.position.x) ))*( (this.position.x - (otherBall.position.x) ))
@@ -308,7 +332,7 @@ public class Ball {
     }
 
     private void forces(Ball otherBall, float distance, float totalRadius) {
-        if (forces && totalRadius + 1f < distance) {
+        if (forces && totalRadius < distance) {
             FloatMatrix n = new FloatMatrix(new float[][]{{position.x - otherBall.position.x, position.y - otherBall.position.y}});
             Geometry.normalize(n);
             float force =  ((mass * otherBall.mass)) / (distance);
@@ -339,7 +363,7 @@ public class Ball {
 
     public void grow() {
         if (grow && growing) {
-            radius += 0.5*settings.zoom.camera.zoom;
+            radius += 0.3*settings.zoom.camera.zoom;
         }
         updateMass();
     }
