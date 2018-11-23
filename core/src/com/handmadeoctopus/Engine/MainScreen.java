@@ -17,48 +17,46 @@ import com.handmadeoctopus.environment.Zoom;
 
 public class MainScreen implements Screen {
 
-    Game game; // game object which is transferred in constructor from main class.
+    Game game; // game object which is transferred in constructor from main class
 
-    SpriteBatch batch, batchUi; // batches for sprites and other drawings, batchUi is used to draw UI.
-    OrthographicCamera camera, uiCamera; // similar to batches, cameras for both environments.
-    ShapeRenderer renderer; // Renderer for our non-sprite objects.
+    SpriteBatch batch, batchUi; // batches for sprites and other drawings, batchUi is used to draw UI
+    OrthographicCamera camera, uiCamera; // similar to batches, cameras for both environments
+    ShapeRenderer renderer; // Renderer for our non-sprite objects
 
-    Settings settings; // Main setting of the game.
+    Settings settings; // Main setting of the game
 
-    Stage stage; // Main stage, for our UI.
+    Stage stage; // Main stage, for our UI
 
-    Box box; // Rectangle where our objects will collide.
+    Box box; // Rectangle where our objects will collide
 
-    Zoom zoom; // Zoom class which helps us handle UI.
+    Zoom zoom; // Zoom class which helps us handle UI
 
     FrameBuffer buffer;
 
+    private InputHandler handler; // Our input handler, handles all actions
 
-    private InputHandler handler; // Our input handler, handles all actions.
+    private MainEngine mainEngine; // Main engine of the game
 
-    private MainEngine mainEngine; // Main engine of the game.
+    public float width, height; // width and height of the in game screen
 
-    public float width, height; // width and height of the in game screen.
-
-    Ball ball, ball2;
 
     public MainScreen(Game game) {
         this.game = game;
 
-        // We calculateAll here height from height/width ratio.
+        // We calculateAll here height from height/width ratio
         width = BouncingBallEngine.WIDTH;
         float w = Gdx.graphics.getWidth();
         float h = Gdx.graphics.getHeight();
         height = (int) width * ( h/w );
 
-        // We set up cameras.
+        // Set up cameras and update to size.
         camera = new OrthographicCamera(width, height);
         camera.update();
 
         uiCamera = new OrthographicCamera(width, height);
         uiCamera.update();
 
-        // Setting zoom and box.
+        // Setting zoom and box that balls bounce in
         zoom = new Zoom(camera, uiCamera);
         box = new Box(width, height);
         zoom.setWorldBounds(0, 0,  width,  height);
@@ -69,7 +67,7 @@ public class MainScreen implements Screen {
         renderer = new ShapeRenderer();
         buffer = new FrameBuffer(Pixmap.Format.RGB565, (int) width, (int) height, false);
 
-        // Setting up stage which is extended to uiCamera.
+        // Setting up stage which is extended to uiCamera
         stage = new Stage(new ExtendViewport(width, height, uiCamera));
 
         // Settings, where all game characteristics are kept.
@@ -86,12 +84,13 @@ public class MainScreen implements Screen {
 
 
 
-
+    // Called when this screen becomes the current screen for a {@link Game}.
     @Override
     public void show() {
 
     }
 
+    //Called when the screen should render itself.  @param delta The time in seconds since the last render.
     @Override
     public void render(float delta) {
         // Main rendering class. First screen is cleared, then cameras are updated and combined with batches and renderer.
@@ -101,6 +100,7 @@ public class MainScreen implements Screen {
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
         Gdx.gl.glBlendEquation(GL20.GL_FUNC_ADD);
 
+        // Updates camera with initial values
         camera.update();
         uiCamera.update();
 
@@ -109,11 +109,8 @@ public class MainScreen implements Screen {
         batchUi.setProjectionMatrix(uiCamera.combined);
         renderer.setProjectionMatrix(batch.getProjectionMatrix());
 
-
-
-
+        // Draws each frame
         draw();
-
 
         Gdx.gl.glDisable(GL20.GL_BLEND);
     }
@@ -122,17 +119,19 @@ public class MainScreen implements Screen {
         // Method for drawing all entities and UI.
         renderer.begin(ShapeRenderer.ShapeType.Filled);
 
-
         mainEngine.drawBalls(renderer);
         box.draw(renderer);
 
         renderer.end();
 
-        /*
+        /* Batch renderer if we want to use texture instead of rendered cicrles.
         batch.begin();
         mainEngine.drawBalls(batch);
         batch.end();
-*/
+        */
+
+
+        // Draws UI.
         batchUi.begin();
         handler.drawUi();
         batchUi.end();
@@ -151,15 +150,17 @@ public class MainScreen implements Screen {
         this.height = this.width * f; // Height calculated from screen size height/width ratio.
 
         // Box, cameras and handler updated.
-
         box.set(0, 0, 0, this.width, this.height, this.width);
 
+        // Camera is set to default middle scren position
         camera.setToOrtho(false, this.width, this.height);
         camera.position.set(camera.viewportWidth / 2f, camera.viewportHeight / 2f, 0);
         camera.update();
 
+        // Update handler ui positions.
         handler.update(width, height);
 
+        // Camera is set to default middle scren position - for some reason sometimes required twice.
         uiCamera.setToOrtho(false, this.width, this.height);
         uiCamera.position.set(uiCamera.viewportWidth / 2f, uiCamera.viewportHeight / 2f, 0);
         uiCamera.update();

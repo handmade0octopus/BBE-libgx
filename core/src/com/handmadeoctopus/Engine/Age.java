@@ -79,6 +79,7 @@ public class Age {
     // Updates balls parameters
     public void updateBalls(SettingEntry settingEntry) {
         Settings.SettingsEnum settingId = settingEntry.getSettingId();
+        // Case switch for every settings entry and how each settings affect game engine.
         switch(settingId) {
             case RESET: settings.resetDefaults(); break;
             case BALLSQUANTITY:

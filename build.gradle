@@ -43,6 +43,10 @@ project(":desktop") {
         compile "com.badlogicgames.gdx:gdx-backend-lwjgl:$gdxVersion"
         compile "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
     }
+
+    jar {
+
+    }
 }
 
 project(":android") {
@@ -86,3 +90,4 @@ project(":core") {
 tasks.eclipse.doLast {
     delete ".project"
 }
+

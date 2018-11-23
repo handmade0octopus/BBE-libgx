@@ -78,26 +78,14 @@ public class MainEngine {
         init();
     }
 
-    // Draws all balls and performs actions on them
-  /*  public void drawBalls(ShapeRenderer renderer) {
-        if (balls != null) {
-            for (int i = 0; i < balls.size; i++) {
-                if (balls.size == 1) { balls.get(0).act(null); }
-                for (int j = i+1; j < balls.size; j++) {
-                    balls.get(i).act(balls.get(j));
-                }
-                if (balls.size == i+1) { balls.get(i).act(null); }
-                balls.get(i).draw(renderer);
-            }
-        }
-    }
 
-    */
+
     // Draws all balls and performs actions on them BATCH
     public void drawBalls(SpriteBatch batch) {
         age.drawCurrentYear(batch);
     }
 
+    // Draws balls with renderer.
     public void drawBalls(ShapeRenderer renderer) {
         age.drawCurrentYear(renderer);
     }
@@ -117,11 +105,15 @@ public class MainEngine {
         age.actionUp(x, y);
     }
 
+    public void buttonDown(int keycode) {
+        age.buttonDown(keycode);
+    }
+
+    // Get settings when called
     int getSetting(Settings.SettingsEnum setting) {
         return settingMap.get(setting);
     }
 
-    public void buttonDown(int keycode) {
-        age.buttonDown(keycode);
-    }
+
+
 }

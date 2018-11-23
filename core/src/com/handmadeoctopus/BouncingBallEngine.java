@@ -5,10 +5,10 @@ import com.handmadeoctopus.Engine.MainScreen;
 
 /*
 Main class which starts MainScreen class.
+Extends Game from BadLogic LibGDX
  */
 
 public class BouncingBallEngine extends Game {
-
 
 	MainScreen mainScreen; // main screen, object to be used in future if need to create different MainScreen.
 
@@ -17,7 +17,7 @@ public class BouncingBallEngine extends Game {
 	@Override
 	public void create() {
 		init();
-		this.setScreen(mainScreen = new MainScreen(this)); // sets screen to what we want.
+		this.setScreen(mainScreen = new MainScreen(this)); // Runs the program creating new MainScreen of the game
 	}
 
 	private void init() {
