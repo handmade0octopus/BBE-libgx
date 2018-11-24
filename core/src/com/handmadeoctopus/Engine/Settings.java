@@ -16,8 +16,8 @@ import java.util.HashMap;
 
 public class Settings {
     // Variables for main settings
-    public int ballsQuantity, ballsSize, ballsTail, springiness, gravity, forces, speed, universeScale;
-    public boolean gravitation, ballsForces, reset = false;
+    int ballsQuantity, ballsSize, ballsTail, springiness, gravity, forces, speed, universeScale;
+    boolean gravitation, ballsForces, reset = false;
     float screenRatio = 0.5f;
     Menu menu; // To control and update after change in values
     public Zoom zoom;
@@ -36,7 +36,7 @@ public class Settings {
         prefs = Gdx.app.getPreferences("GAMEPREFS");
     }
 
-    // Sets menu on or off if necessary.
+    // Sets menu and passes on all values to HashMap
     public void setMenu(Menu menu) {
         this.menu = menu;
         settingMap = new HashMap<SettingsEnum, SettingEntry>();
@@ -48,15 +48,17 @@ public class Settings {
     }
 
 
+    // Called when value from settings change
     void action(SettingEntry settingEntry) {
         if(mainEngine != null) { mainEngine.action(settingEntry); }
     }
 
+    // Gets setting from current setting map
     public SettingEntry getSetting(SettingsEnum set) {
         return settingMap.get(set);
     }
 
-    // Sets all values if necessary.
+    // Sets all values if necessary, not used anymore
     public void set(int ballsQuantity, int ballsSize, int ballsTail, int springiness, int gravity, int forces, int universeScale) {
         this.ballsQuantity = ballsQuantity;
         this.ballsSize = ballsSize;
@@ -142,6 +144,7 @@ public class Settings {
         zoom.reset();
     }
 
+    //Setters
     void setMainEngine(MainEngine mainEngine) {
         this.mainEngine = mainEngine;
     }
@@ -175,10 +178,13 @@ public class Settings {
 
     // Enum with all variables and button names.
     public enum SettingsEnum {
+        /** TODO: String and values will be changed to external file in the future **/
+
         RESET("RESET", 0, 0 ,0, true, 0),
         BALLSQUANTITY("BALLS' QUANTITY", 0, 50, 500, true, 1),
         BALLSSIZE("BALLS' SIZE", 1, 10, 50, true, 2),
         BALLSTAIL("BALLS' TAIL", 0, 10, 100, true, 3),
+        MAXPATH("MAX PATH", 0, 100, 1000, true, 10),
         SPRINGINESS("SPRINGINESS %", 0, 100, 110, true, 4),
         GRAVITY("GRAVITY %", -100, 0, 100, true, 5),
         FORCES("FORCES %", -200, 10, 200, true, 6),

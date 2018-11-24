@@ -160,7 +160,7 @@ public class MainScreen implements Screen {
         // Update handler ui positions.
         handler.update(width, height);
 
-        // Camera is set to default middle scren position - for some reason sometimes required twice.
+        // Camera is set to default middle screen position - for some reason sometimes required twice.
         uiCamera.setToOrtho(false, this.width, this.height);
         uiCamera.position.set(uiCamera.viewportWidth / 2f, uiCamera.viewportHeight / 2f, 0);
         uiCamera.update();

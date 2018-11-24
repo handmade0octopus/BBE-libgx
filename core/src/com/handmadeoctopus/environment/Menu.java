@@ -19,7 +19,7 @@ import com.handmadeoctopus.Engine.Settings;
 import java.util.HashMap;
 
 /* Class that contains all menu buttons,
-also includes Menu entrance button from SlidingMenu
+also includes Menu entrance button from SlidingMenu. Mostly based on LibGDX stage
  */
 
 public class Menu {

@@ -18,8 +18,7 @@ import java.util.HashMap;
 
 public class MainEngine {
     Array<Ball> balls = null;
-    int ballsQuantity, ballsSize, ballsTail, springiness, gravity, forces, speed, universeScale;
-    boolean gravitation, ballsForces;
+
 
     private Box box;
     private Zoom zoom;
@@ -61,7 +60,7 @@ public class MainEngine {
             settingMap.put(set, settings.getSetting(set).getValue());
         }
 
-        ballsQuantity = settings.ballsQuantity;
+    /*    ballsQuantity = settings.ballsQuantity;
         ballsSize = settings.ballsSize;
         ballsTail = settings.ballsTail;
         springiness = settings.springiness;
@@ -70,7 +69,7 @@ public class MainEngine {
         speed = settings.speed;
         gravitation = settings.gravitation;
         ballsForces = settings.ballsForces;
-        universeScale = settings.universeScale;
+        universeScale = settings.universeScale; */
     }
 
     //Reloads balls

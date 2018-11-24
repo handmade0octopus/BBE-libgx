@@ -21,13 +21,13 @@ import java.util.concurrent.*;
 public class Age {
 
     public int buffer = 300;
-    private int year, calculatedYear, difference, lastSpeed = 1, drawBuffer = 50;
+    private int year, calculatedYear, difference, lastSpeed = 1, drawBuffer = 100;
     private final int MIN_BUFFER = 10, MAX_BUFFER = 3000, MIN_DRAWB = 0, MAX_DRAWB = 3000;
     private float averageFPS = 0;
     private int numberOfFrames = 0;
     public HistoryEntry drawYear;
     private Array<Ball> newYear, balls;
-    private List<HistoryEntry> history, tempPath;
+    private List<HistoryEntry> history, tempPath = null;
     private boolean sameFrame = false;
     Settings settings;
     MainEngine mainEngine;
@@ -60,16 +60,18 @@ public class Age {
 
     // Reloads game with new age
     public void reload() {
-        if (drawYear != null) { drawYear.resetYear(); }
         try {
             sem.acquire();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        if (drawYear != null) { drawYear.resetYear(); }
         year = 0;
         calculatedYear = 0;
         drawYear = HistoryEntry.getNewYear(settings.getSetting(Settings.SettingsEnum.BALLSQUANTITY).getValue(), settings);
         drawYear.resetYear();
+        tempPath = null;
+        history.clear();
         history.add(year, drawYear);
         difference = buffer - (calculatedYear - year);
         sem.release();
@@ -78,19 +80,30 @@ public class Age {
 
     // Updates balls parameters
     public void updateBalls(SettingEntry settingEntry) {
+
         Settings.SettingsEnum settingId = settingEntry.getSettingId();
         // Case switch for every settings entry and how each settings affect game engine.
         switch(settingId) {
             case RESET: settings.resetDefaults(); break;
             case BALLSQUANTITY:
+                try {
+                    sem.acquire();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 int diff = settingEntry.getValue() - mainEngine.getSetting(settingId);
                 if(diff > 0) {
                     for(int i = 0; i < diff; i++) {
                         drawYear.getBalls().add(new Ball(settings));
                     }
                 } else if (diff < 0) {
-                    drawYear.getBalls().setSize(settingEntry.getValue());
+                    int start = settingEntry.getValue();
+                    if (start < 0) { start = 0; }
+                    if (drawYear.getBalls().size-1 >= 0 && drawYear.getBalls().size-1 > start) {
+                        drawYear.getBalls().removeRange(start, drawYear.getBalls().size-1);
+                    }
                 }
+                sem.release();
                 break;
             case BALLSSIZE:
                 if(settingEntry.getValue() != mainEngine.getSetting(settingId)) {
@@ -108,6 +121,13 @@ public class Age {
                 if(settingEntry.getValue() != mainEngine.getSetting(settingId)) {
                     for(Ball ball : drawYear.getBalls()) {
                         ball.tail = (settingEntry.getValue());
+                    }
+                }
+                break;
+            case MAXPATH:
+                if(settingEntry.getValue() != mainEngine.getSetting(settingId)) {
+                    for(Ball ball : drawYear.getBalls()) {
+                        ball.path = (settingEntry.getValue());
                     }
                 }
                 break;
@@ -151,26 +171,32 @@ public class Age {
 
     // Draws all balls and performs actions on them BATCH
     public void drawCurrentYear(SpriteBatch batch) {
+        // Semaphore used so thread of calculation won't cause issues with drawing.
         try {
             sem.acquire();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
-   //     writer.println(drawYear.getYear());
+        //     writer.println(drawYear.getYear());
+
+        // Gets current year of balls and renders tail and path of them.
         balls = drawYear.getBalls();
         for (int i = 0; i < balls.size; i++) {
-            if (year > 1  ) {
-                balls.get(i).drawTail(batch, history.subList(year-settings.getSetting(Settings.SettingsEnum.BALLSTAIL).getValue()*2 < 1 ? 0 : year-settings.getSetting(Settings.SettingsEnum.BALLSTAIL).getValue()*2 - 1, year), i);
+            if (year > 1 && settings.getSetting(Settings.SettingsEnum.BALLSTAIL).getValue() > 0) {
+                balls.get(i).drawTail(batch,
+                        history.subList(year-settings.getSetting(Settings.SettingsEnum.BALLSTAIL).getValue()*2 < 1 ? 0 : year-settings.getSetting(Settings.SettingsEnum.BALLSTAIL).getValue()*2, year+1 > calculatedYear ? year-1 : year + 1), i);
             }
             if (year+drawBuffer > calculatedYear && tempPath != null) {
-                balls.get(i).drawPath(batch, tempPath, i);
-            } else {
-                balls.get(i).drawPath(batch, history.subList(year, Math.min(year+drawBuffer, history.size())), i);
+                balls.get(i).drawPath(batch, tempPath.subList(year, Math.min(tempPath.size(), year + settings.getSetting(Settings.SettingsEnum.MAXPATH).getValue())), i);
+            } else if (history.size() > year) {
+                balls.get(i).drawPath(batch, history.subList(year, Math.min(calculatedYear, year + settings.getSetting(Settings.SettingsEnum.MAXPATH).getValue())), i);
             }
 
+            // Finally renders balls from current year
             balls.get(i).draw(batch);
         }
+
         adjustBuffer();
         sem.release();
         if(mainEngine.newBall != null) {
@@ -180,7 +206,9 @@ public class Age {
         addYear(year + buffer < calculatedYear ? 0 : settings.getSetting(Settings.SettingsEnum.SPEED).getValue());
     }
 
-    public void drawCurrentYear(ShapeRenderer batch) {
+    // Rendered if we don't want to use texture
+    public void drawCurrentYear(ShapeRenderer renderer) {
+        // Semaphore used so thread of calculation won't cause issues with drawing.
         try {
             sem.acquire();
         } catch (InterruptedException e) {
@@ -188,25 +216,28 @@ public class Age {
         }
 
         //     writer.println(drawYear.getYear());
+
+        // Gets current year of balls and renders tail and path of them.
         balls = drawYear.getBalls();
         for (int i = 0; i < balls.size; i++) {
             if (year > 1 && settings.getSetting(Settings.SettingsEnum.BALLSTAIL).getValue() > 0) {
-                balls.get(i).drawTail(batch,
+                balls.get(i).drawTail(renderer,
                         history.subList(year-settings.getSetting(Settings.SettingsEnum.BALLSTAIL).getValue()*2 < 1 ? 0 : year-settings.getSetting(Settings.SettingsEnum.BALLSTAIL).getValue()*2, year+1 > calculatedYear ? year-1 : year + 1), i);
             }
-            if (year+drawBuffer > calculatedYear && tempPath != null) {
-                balls.get(i).drawPath(batch, tempPath, i);
+            if (year+drawBuffer > calculatedYear && tempPath != null && tempPath.size() > year) {
+                balls.get(i).drawPath(renderer, tempPath.subList(year, Math.min(tempPath.size(), year + settings.getSetting(Settings.SettingsEnum.MAXPATH).getValue())), i);
             } else {
-                balls.get(i).drawPath(batch, history.subList(year, Math.min(year+drawBuffer, history.size())), i);
+                balls.get(i).drawPath(renderer, history.subList(year, Math.min(calculatedYear, year + settings.getSetting(Settings.SettingsEnum.MAXPATH).getValue())), i);
             }
 
-            balls.get(i).draw(batch);
+            // Finally renders balls from current year
+            balls.get(i).draw(renderer);
         }
         adjustBuffer();
         sem.release();
         if(mainEngine.newBall != null) {
             mainEngine.newBall.grow();
-            mainEngine.newBall.draw(batch);
+            mainEngine.newBall.draw(renderer);
         }
         addYear(year + buffer < calculatedYear ? 0 : settings.getSetting(Settings.SettingsEnum.SPEED).getValue());
     }
@@ -224,6 +255,7 @@ public class Age {
                 } else {
                     buffer--;
                 }
+                if(buffer < drawBuffer) { buffer = drawBuffer+1; }
                 if(year+ buffer < calculatedYear) {
                     calculatedYear = year+ buffer;
                     history.subList(calculatedYear+1, history.size()).clear();
@@ -241,12 +273,13 @@ public class Age {
             } else if (averageFPS < 0.02f && drawBuffer < Math.min(MAX_DRAWB, (250000f/(drawYear.getBalls().size)))) {
                 drawBuffer += 1/deltaTime;
             }
+            if(buffer < drawBuffer) { buffer = drawBuffer+1; }
             numberOfFrames = 0;
             averageFPS = 0;
         }
     }
 
-    // Adds i years to calculate and load drawYear
+    // Adds i years to calculate and load drawYear. Numbers of years to add is based on SPEED
     private void addYear(int years) {
         try {
             sem.acquire();
@@ -259,71 +292,12 @@ public class Age {
         if (year >= calculatedYear) {
             year = calculatedYear;
             drawYear = history.get(year);
-        } else if (year < calculatedYear) {
+        } else {
             drawYear = history.get(year);
             drawYear.addYear(years);
         }
 
 
-        sem.release();
-        threadCalculate();
-    }
-
-    // Calculates new history.
-    private void calculate() {
-        try {
-            sem.acquire();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        newYear = HistoryEntry.clone(history.get(calculatedYear).getBalls());
-
-        for (int i = 0; i < newYear.size; i++) {
-            for (int j = i+1; j < newYear.size; j++) {
-                newYear.get(i).act(newYear.get(j)).grow();
-            }
-            if (newYear.size == 1) { newYear.get(0).grow(); }
-            if (newYear.size == i+1) { newYear.get(i).grow(); }
-            newYear.get(i).move();
-        }
-     /*   newYear.sort(new Comparator<Ball>() {
-            @Override
-            public int compare(Ball o1, Ball o2) {
-                return (int) (o2.getZ() - o1.getZ());
-            }
-        }); */
-
-        calculatedYear++;
-        if(calculatedYear >= year + drawBuffer) {
-            history.subList(calculatedYear, history.size()).clear();
-            tempPath = null;
-        }
-        history.add(calculatedYear, new HistoryEntry(newYear));
-
-        sem.release();
-
-        eraseHistory();
-    }
-
-
-    // Erases history so it doesn't take much space.
-    private void eraseHistory() {
-        try {
-            sem.acquire();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        if (calculatedYear < history.size() && calculatedYear >= year+drawBuffer) {
-            history.subList(calculatedYear+1, history.size()).clear();
-        }
-        int maxHistory = settings.getSetting(Settings.SettingsEnum.BALLSTAIL).getValue()*2;
-        if (year > maxHistory + 100) {
-            int difference = year - maxHistory;
-            history.subList(0, difference).clear();
-           // for(int i = 0; i < difference; i++) { history.remove(0); }
-            year -= difference;
-            calculatedYear -= difference;
-        }
         sem.release();
         threadCalculate();
     }
@@ -357,6 +331,74 @@ public class Age {
         }
     }
 
+    // Calculates new history.
+    private void calculate() {
+        try {
+            sem.acquire();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        newYear = HistoryEntry.clone(history.get(calculatedYear).getBalls());
+
+        // After cloning last calculated year, newYear is then calculated, each ball acts with each other
+        for (int i = 0; i < newYear.size; i++) {
+            for (int j = i+1; j < newYear.size; j++) {
+                newYear.get(i).act(newYear.get(j)).grow();
+            }
+            if (newYear.size == 1) { newYear.get(0).grow(); }
+            if (newYear.size == i+1) { newYear.get(i).grow(); }
+            newYear.get(i).move();
+        }
+
+
+        // To prevent memory flood, we only allow to calculate this much further
+        calculatedYear++;
+        if(calculatedYear > year + drawBuffer) {
+            history.subList(calculatedYear, history.size()).clear();
+            tempPath = null;
+        }
+        if (tempPath != null && calculatedYear >  drawBuffer ) {
+            tempPath = null;
+        }
+        history.add(calculatedYear, new HistoryEntry(newYear));
+
+        // Adjust tempPath for smooth change in path
+        if(tempPath!=null && calculatedYear < tempPath.size()) {
+            tempPath.set(calculatedYear, history.get(calculatedYear));
+        } else if (tempPath!=null) {
+            tempPath.add(calculatedYear, history.get(calculatedYear));
+        }
+
+        sem.release();
+
+        eraseHistory();
+    }
+
+
+    // Erases history so it doesn't take much space.
+    private void eraseHistory() {
+        try {
+            sem.acquire();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        if (calculatedYear < history.size() && calculatedYear >= year+drawBuffer) {
+            history.subList(calculatedYear+1, history.size()).clear();
+        }
+        int maxHistory = settings.getSetting(Settings.SettingsEnum.BALLSTAIL).getValue()*2 + 10;
+        if (year > maxHistory) {
+            int difference = year - maxHistory;
+            history.subList(0, difference).clear();
+            if (tempPath != null) { tempPath.subList(0, difference).clear(); }
+           // for(int i = 0; i < difference; i++) { history.remove(0); }
+            year -= difference;
+            calculatedYear -= difference;
+        }
+        sem.release();
+        threadCalculate();
+    }
+
+
     // Refresh .wait() from calculateAll function
     public void threadCalculate() {
         synchronized(this) {
@@ -371,7 +413,7 @@ public class Age {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        drawYear.getBalls().add(ball);
+           drawYear.getBalls().add(ball);
         sem.release();
         flush();
     }
@@ -383,7 +425,7 @@ public class Age {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        drawYear.getBalls().removeValue(ball, true);
+         drawYear.getBalls().removeValue(ball, true);
         sem.release();
         flush();
     }
@@ -395,23 +437,44 @@ public class Age {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        if(year+drawBuffer < calculatedYear){
-            tempPath = history.subList(year, year+drawBuffer);
-            List<HistoryEntry> flushHistory = history.subList(year, year+drawBuffer);
-            tempPath = new ArrayList<HistoryEntry>();
-            for(HistoryEntry hist : flushHistory) {
-                tempPath.add(new HistoryEntry(HistoryEntry.clone(hist.getBalls())));
+        // tempPath is for smooth path when changing the scene
+        if(year < calculatedYear && tempPath == null){
+            List<HistoryEntry> flushHistory = history.subList(0, Math.min(calculatedYear, drawBuffer+year));
+                tempPath = new ArrayList<HistoryEntry>();
+                for(HistoryEntry hist : flushHistory) {
+                    tempPath.add(new HistoryEntry(HistoryEntry.clone(hist.getBalls())));
             }
-            if(calculatedYear > year) {
-                calculatedYear = year;
-                history.subList(year+1, history.size()).clear();
+        } else if (year < calculatedYear) {
+            List<HistoryEntry> flushHistory = history.subList(0, Math.min(calculatedYear, drawBuffer+year));
+            for(int i =0; i < flushHistory.size(); i++) {
+                if(i < tempPath.size()){
+                    tempPath.set(i, new HistoryEntry(HistoryEntry.clone(flushHistory.get(i).getBalls())));
+                } else {
+                    tempPath.add(i, new HistoryEntry(HistoryEntry.clone(flushHistory.get(i).getBalls())));
+                }
             }
+        }
+
+        if(calculatedYear > year) {
+            calculatedYear = year;
+            history.subList(year+1, history.size()).clear();
         }
 
         sem.release();
     }
 
-    // Action down handled
+
+    // Returns drawYear
+    public int currentYear() {
+        return year;
+    }
+
+    // Returns buffer
+    public int getBufferSize() {
+        return calculatedYear - settings.ballsTail;
+    }
+
+    // Action down, up and button press handled by the engine
     public boolean actionDown(float x, float y) {
         for (Ball ball : drawYear.getBalls()) {
             if (mainEngine.newBall == null) {
@@ -449,16 +512,6 @@ public class Age {
         if(settings.getSetting(Settings.SettingsEnum.SPEED).getValue() != 0) { addBall(mainEngine.newBall); }
         mainEngine.newBall = null;
         mainEngine.handlingBall = false;
-    }
-
-    // Returns drawYear
-    public int currentYear() {
-        return year;
-    }
-
-    // Returns buffer
-    public int getBufferSize() {
-        return calculatedYear - settings.ballsTail;
     }
 
     public void buttonDown(int keycode) {

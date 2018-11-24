@@ -32,6 +32,7 @@ public class MenuEntry {
         updateValue();
     }
 
+    // This is probably worst looking but best working part of the code
     private void initSlider(Settings.SettingsEnum menuEntryId) {
         // Adds slider, label is unnecessary but I left it in case I would want to do something with it.
 

@@ -21,7 +21,7 @@ public class Ball {
     // Position, size and speed of ball//
     Position position;
     public float radius, mass, speedX, speedY, speedZ, xMin, xMax, yMin, yMax, zMin, zMax, x1, y1, projection, rotation;
-    public float gravity = 0, force = 0, springiness = 1, speed = 6, massScale = 1;
+    public float gravity = 0, force = 0, springiness = 1, speed = 6, massScale = 1, path = 100;
     public Texture texture = MainEngine.TEXTURE;
     public Boolean grow = false, gravitation = true, hits = true, forces = true, touchable = false, moving = true;
     Settings settings;
@@ -67,35 +67,37 @@ public class Ball {
     }
 
     private void copyBall(Ball ball, boolean newPosition) {
-        radius = ball.radius;
-        mass = ball.mass;
-        settings = ball.settings;
-        if (newPosition){
-            position = new Position(ball.position);
-        } else {
-            position.set(ball.position);
+        if (ball != null) {
+            radius = ball.radius;
+            mass = ball.mass;
+            settings = ball.settings;
+            if (newPosition){
+                position = new Position(ball.position);
+            } else {
+                position.set(ball.position);
+            }
+            speedX = ball.speedX;
+            speedY = ball.speedY;
+            speedZ = ball.speedZ;
+            xMin = ball.xMin;
+            xMax = ball.xMax;
+            yMin = ball.yMin;
+            yMax = ball.yMax;
+            gravity = ball.gravity;
+            force = ball.force;
+            springiness = ball.springiness;
+            texture = ball.texture;
+            speed = ball.speed;
+            grow = ball.grow;
+            gravitation = ball.gravitation;
+            hits = ball.hits;
+            forces = ball.forces;
+            touchable = ball.touchable;
+            box = ball.box;
+            clr = ball.clr;
+            tail = ball.tail;
+            updateRotation();
         }
-        speedX = ball.speedX;
-        speedY = ball.speedY;
-        speedZ = ball.speedZ;
-        xMin = ball.xMin;
-        xMax = ball.xMax;
-        yMin = ball.yMin;
-        yMax = ball.yMax;
-        gravity = ball.gravity;
-        force = ball.force;
-        springiness = ball.springiness;
-        texture = ball.texture;
-        speed = ball.speed;
-        grow = ball.grow;
-        gravitation = ball.gravitation;
-        hits = ball.hits;
-        forces = ball.forces;
-        touchable = ball.touchable;
-        box = ball.box;
-        clr = ball.clr;
-        tail = ball.tail;
-        updateRotation();
     }
 
     // Changes colour to random
@@ -236,7 +238,7 @@ public class Ball {
 
     // Checks if ball is hit
     public void hit(Ball otherBall, float distance, float totalRadius) {
-        // Balls collide with each other
+        // distSpeed is distance + speed of balls so the calculations are done for the future
             float distSpeed = ( (position.x + speedX )
                     - (otherBall.position.x + otherBall.speedX))*( (position.x + speedX )
                     - (otherBall.position.x + otherBall.speedX))
@@ -244,6 +246,7 @@ public class Ball {
                     - (otherBall.position.y + otherBall.speedY))*( (position.y + speedY)
                     - (otherBall.position.y + otherBall.speedY));
 
+            // Check if balls colide
             if(hits && totalRadius >= distSpeed) {
                 FloatMatrix n = new FloatMatrix(new float[][] {{position.x - otherBall.position.x, position.y - otherBall.position.y}});
                 FloatMatrix v1 = new FloatMatrix(new float[][] {{speedX, speedY}});
@@ -257,6 +260,7 @@ public class Ball {
                 FloatMatrix v2p = v2.add(n.mul(optimizedP*mass));
 
 
+                // If difference of mass is too big only one ball will be affected
                 if(mass*1000 < otherBall.mass) {
                     speedX = v1p.get(0);
                     speedY = v1p.get(1);
@@ -272,6 +276,7 @@ public class Ball {
 
 
 
+                // Moves balls if they are stuck together
                 while (totalRadius > distance) {
                     float move = 1f;
                     if ((this.position.x) - (otherBall.position.x) > 0) {
@@ -308,6 +313,7 @@ public class Ball {
 
                     }
 
+                    // Slows the ball and updates rotation
                     slow();
                     otherBall.slow();
                     updateRotation();
@@ -468,27 +474,28 @@ public class Ball {
         }
     }
 
+    // A line (before only points) to the ball positions in the past
     public void drawTail(ShapeRenderer renderer, List<HistoryEntry> historyEntries, int d) {
         for (int i = 0; i < historyEntries.size(); i++) {
             if (d < historyEntries.get(i).getBalls().size && i + 1 < historyEntries.size() && d < historyEntries.get(i+1).getBalls().size ) {
-                float alpha = clr.a*((1f+i)/historyEntries.size());
+                float alpha = ((0f+i)/historyEntries.size())*((0f+i)/historyEntries.size())*((0f+i)/historyEntries.size());
                 renderer.setColor(new Color(clr.r, clr.g, clr.b, alpha));
                 Ball ball = historyEntries.get(i).getBalls().get(d);
-        //      renderer.circle(ball.position.x, ball.position.y, ball.radius, 180);
                 Ball ball2 = historyEntries.get(i + 1).getBalls().get(d);
+                renderer.circle(ball.position.x, ball.position.y, radius);
                 float angle = (float) Math.toDegrees(Math.atan((ball.position.y - ball2.position.y) / (ball.position.x - ball2.position.x)));
                 float width = (float) Math.sqrt(Math.pow(ball.position.x - ball2.position.x, 2) + Math.pow(ball.position.y - ball2.position.y, 2));
                 renderer.rect((ball.position.x + ball2.position.x) / 2 - (width / 2),
-                            (ball.position.y + ball2.position.y) / 2 - settings.zoom.camera.zoom, (width / 2), settings.zoom.camera.zoom, width,
-                            settings.zoom.camera.zoom * 2, 1f, 1f, angle);
+                            (ball.position.y + ball2.position.y) / 2 - radius, (width / 2), radius, width,
+                            radius*2, 1f, 1f, angle);
             }
         }
     }
 
-    // Draws path in front of ball
+    // Draws path in front of ball. Texture is only points, but renderer actually makes a line from points in future
     public void drawPath(SpriteBatch batch, List<HistoryEntry> historyEntries, int d) {
         for (int i = historyEntries.size()-1; i >= 0; i--) {
-            float alpha = clr.a*(((historyEntries.size()-i/1f)/historyEntries.size()));
+            float alpha = ((historyEntries.size()-i)/historyEntries.size()*1f)*((historyEntries.size()-i)/historyEntries.size()*1f)*((historyEntries.size()-i)/historyEntries.size()*1f);
             batch.setColor(new Color(clr.r, clr.g, clr.b, alpha));
             if (d < historyEntries.get(i).getBalls().size) {
                 Ball ball = historyEntries.get(i).getBalls().get(d);
@@ -503,8 +510,8 @@ public class Ball {
             renderer.setColor(new Color(clr.r, clr.g, clr.b, alpha));
             if (d < historyEntries.get(i).getBalls().size) {
                 Ball ball = historyEntries.get(i).getBalls().get(d);
-         //     renderer.circle(ball.position.x, ball.position.y, settings.zoom.camera.zoom, 180);
-                if (i > 0) {
+         //     renderer.circle(ball.position.x, ball.position.y, settings.zoom.camera.zoom, 180); - used before to show points
+                if (i > 0 && d < historyEntries.get(i-1).getBalls().size) {
                     Ball ball2 = historyEntries.get(i-1).getBalls().get(d);
                     float angle = (float) Math.toDegrees(Math.atan((ball.position.y - ball2.position.y)/(ball.position.x - ball2.position.x)));
                     float width = (float) Math.sqrt(Math.pow(ball.position.x - ball2.position.x, 2)+Math.pow(ball.position.y - ball2.position.y, 2));

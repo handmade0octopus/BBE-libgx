@@ -4,6 +4,7 @@ package com.handmadeoctopus.entities;
 public class Position {
     float x, y, z, rotation;
 
+    // 3D dimension added for future
     public Position(float x, float y, float z) {
         set(x, y, z);
     }

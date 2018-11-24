@@ -13,6 +13,7 @@ public class SettingEntry {
     Menu menu;
     MenuEntry menuEntry;
 
+    // Setting entry is easy way to make changes on each setting.
     public SettingEntry(Settings.SettingsEnum set, Menu menu, Settings settings) {
         this.settings = settings;
         settingId = set;
@@ -24,6 +25,7 @@ public class SettingEntry {
         menuEntry = menu.addMenuEntry(this);
     }
 
+    // Loads the value and resets the default if
     void load() {
         if (!Settings.prefs.getBoolean("SET")) {
             resetDefault();
@@ -35,6 +37,7 @@ public class SettingEntry {
         value = settingId.def;
     }
 
+    // Saves Setting Entry to the prefs
     void save() {
         Settings.prefs.putInteger(settingId.s, value);
         Settings.prefs.putBoolean("SET", true);
@@ -45,7 +48,7 @@ public class SettingEntry {
         return settingId;
     }
 
-    // Called when input is dragged.
+    // Called when input slider is dragged.
     public void drag(float x, TextButton button, TextButton bgButton) {
         float xMin = bgButton.getX() + button.getWidth()/2;
         float xMax = bgButton.getX() + bgButton.getWidth() - button.getWidth()/2;

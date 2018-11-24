@@ -9,6 +9,7 @@ public class TaskRun implements Runnable {
         this.age = age;
     }
 
+    // Calculations are performed on another thread
     @Override
     public void run() {
         while(true) {

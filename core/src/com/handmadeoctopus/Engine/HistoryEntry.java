@@ -11,6 +11,7 @@ public class HistoryEntry {
     BigInteger year = BigInteger.ZERO;
     static BigInteger nextYear = BigInteger.ZERO;
 
+    // Keeps current year of the ball list and keeps count of the year.
     public HistoryEntry (Array<Ball> array) {
         balls = array;
     }
