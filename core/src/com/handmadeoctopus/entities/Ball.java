@@ -257,9 +257,17 @@ public class Ball {
                     + ( (this.position.y) - (otherBall.position.y ))*( (this.position.y) - (otherBall.position.y )));
             float totalRadius = (radius + otherBall.radius)*(radius + otherBall.radius);
 
+            if(nullean.isBecomingNull() && touchable) {
+                nullean.resetNullStatus();
+            }
+            if(otherBall.nullean.isBecomingNull() && otherBall.touchable) {
+                otherBall.nullean.resetNullStatus();
+            }
+
+            Ball ball = hit(otherBall, distance, totalRadius);
             grow();
             forces(otherBall, distance, totalRadius);
-            return hit(otherBall, distance, totalRadius);
+            return ball;
         } else { return null; }
     }
 

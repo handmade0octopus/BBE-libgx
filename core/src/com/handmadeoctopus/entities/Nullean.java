@@ -27,8 +27,17 @@ class Nullean {
         return beingTrueNull;
     }
 
+    boolean isBecomingNull() {
+        return beingNull;
+    }
+
     Nullean getNullean() {
         return this;
     }
 
+    public void resetNullStatus() {
+        beingNull = false;
+        i = 0;
+        becameNull = 0;
+    }
 }
