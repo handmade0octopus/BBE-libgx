@@ -20,8 +20,10 @@ import java.util.Random;
 public class Ball {
     // Position, size and speed of ball//
     Position position;
+    Nullean nullean;
     public float radius, mass, speedX, speedY, speedZ, xMin, xMax, yMin, yMax, zMin, zMax, x1, y1, projection, rotation;
     public float gravity = 0, force = 0, springiness = 1, speed = 6, massScale = 1, path = 100;
+    public int impact = 0;
     public Texture texture = MainEngine.TEXTURE;
     public Boolean grow = false, gravitation = true, hits = true, forces = true, touchable = false, moving = true;
     Settings settings;
@@ -33,12 +35,15 @@ public class Ball {
     public int tail = 0;
 
     // Constructor with random values of color and speed
-    public Ball(float radius, float x, float y, Settings settings) {
+    public Ball (float radius, float x, float y, Settings settings) {
         this.settings = settings;
         randomColour();
+        nullean = new Nullean();
         set(radius, x, y, 0);
+        setBallParameters(settings);
     }
 
+    // Constructor from settings
     public Ball (Settings settings) {
         this.settings = settings;
         setBallParameters(settings.getSetting(Settings.SettingsEnum.GRAVITY).getValue(),
@@ -48,6 +53,7 @@ public class Ball {
                 settings.getSetting(Settings.SettingsEnum.SPEED).getValue(),
                 settings.getSetting(Settings.SettingsEnum.GRAVITY).getValueBool(),
                 settings.getSetting(Settings.SettingsEnum.FORCES).getValueBool(),
+                settings.getSetting(Settings.SettingsEnum.IMPACT).getValue(),
                 settings.box);
         float x = rnd.nextFloat()*box.width + box.xMin, y= rnd.nextFloat()*box.height + box.yMin, z= rnd.nextFloat()*box.depth + box.zMin;
         while(x < box.xMin && x > box.xMax) {
@@ -57,11 +63,13 @@ public class Ball {
             y = rnd.nextFloat()*box.height;
         }
         randomSpeedXY();
+        nullean = new Nullean();
         randomColour();
         set(settings.getSetting(Settings.SettingsEnum.BALLSSIZE).getValue(), x, y, z);
 
     }
 
+    // Constructor that copies from other Ball, useful if we wan't to make changes to future balls
     public Ball (Ball ball) {
         copyBall(ball, true);
     }
@@ -96,6 +104,8 @@ public class Ball {
             box = ball.box;
             clr = ball.clr;
             tail = ball.tail;
+            impact = ball.impact;
+            nullean = ball.nullean;
             updateRotation();
         }
     }
@@ -139,7 +149,7 @@ public class Ball {
     }
 
     // Sets other ball parameters
-    public void setBallParameters(int gravity, int spring, int tail, int force, int speed, boolean gravitation, boolean forces, Box box) {
+    public void setBallParameters(int gravity, int spring, int tail, int force, int speed, boolean gravitation, boolean forces, int impact, Box box) {
         this.force = force;
         this.box = box;
         this.gravitation = gravitation;
@@ -158,6 +168,8 @@ public class Ball {
         this.force = force/10000f;
         this.forces = true;
 
+        this.impact = impact;
+
         this.tail = tail;
         updateRotation();
     }
@@ -171,6 +183,7 @@ public class Ball {
                 settings.getSetting(Settings.SettingsEnum.SPEED).getValue(),
                 settings.getSetting(Settings.SettingsEnum.GRAVITY).getValueBool(),
                 settings.getSetting(Settings.SettingsEnum.FORCES).getValueBool(),
+                settings.getSetting(Settings.SettingsEnum.IMPACT).getValue(),
                 settings.box);
     }
 
@@ -211,6 +224,7 @@ public class Ball {
         }
     }
 
+    // Rotation for texture purposes, doesn't show anything on renderer
     private void updateRotation() {
         rotation = (float) Math.toDegrees(Math.atan2(speedX, speedY));
         if(speedX >= 0) {
@@ -226,9 +240,9 @@ public class Ball {
         speedY *= springiness /less;
         speedX *= springiness /less;
         speedZ *= springiness /less;
-        if (Math.abs(speedX) < 0.01) { speedX = 0; }
-        if (Math.abs(speedY) < 0.01) { speedY = 0; }
-        if (Math.abs(speedZ) < 0.01) { speedZ = 0; }
+        if (Math.abs(speedX) < 0.001) { speedX = 0; }
+        if (Math.abs(speedY) < 0.001) { speedY = 0; }
+        if (Math.abs(speedZ) < 0.001) { speedZ = 0; }
     }
 
     // Slows ball after hit
@@ -236,9 +250,22 @@ public class Ball {
         slow(1);
     }
 
+    // Performs all ball actions
+    public Ball act(Ball otherBall) {
+        if(otherBall != null) {
+            float distance = (( (this.position.x - (otherBall.position.x) ))*( (this.position.x - (otherBall.position.x) ))
+                    + ( (this.position.y) - (otherBall.position.y ))*( (this.position.y) - (otherBall.position.y )));
+            float totalRadius = (radius + otherBall.radius)*(radius + otherBall.radius);
+
+            grow();
+            forces(otherBall, distance, totalRadius);
+            return hit(otherBall, distance, totalRadius);
+        } else { return null; }
+    }
+
     // Checks if ball is hit
-    public void hit(Ball otherBall, float distance, float totalRadius) {
-        // distSpeed is distance + speed of balls so the calculations are done for the future
+    public Ball hit(Ball otherBall, float distance, float totalRadius) {
+            // distSpeed is distance + speed of balls so the calculations are done for the future
             float distSpeed = ( (position.x + speedX )
                     - (otherBall.position.x + otherBall.speedX))*( (position.x + speedX )
                     - (otherBall.position.x + otherBall.speedX))
@@ -246,7 +273,7 @@ public class Ball {
                     - (otherBall.position.y + otherBall.speedY))*( (position.y + speedY)
                     - (otherBall.position.y + otherBall.speedY));
 
-            // Check if balls colide
+            // Check if balls collide
             if(hits && totalRadius >= distSpeed) {
                 FloatMatrix n = new FloatMatrix(new float[][] {{position.x - otherBall.position.x, position.y - otherBall.position.y}});
                 FloatMatrix v1 = new FloatMatrix(new float[][] {{speedX, speedY}});
@@ -261,10 +288,10 @@ public class Ball {
 
 
                 // If difference of mass is too big only one ball will be affected
-                if(mass*1000 < otherBall.mass) {
+                if(mass*10000 < otherBall.mass) {
                     speedX = v1p.get(0);
                     speedY = v1p.get(1);
-                } else if(mass > otherBall.mass*1000) {
+                } else if(mass > otherBall.mass*10000) {
                     otherBall.speedX = v2p.get(0);
                     otherBall.speedY = v2p.get(1);
                 } else {
@@ -273,8 +300,6 @@ public class Ball {
                     otherBall.speedX = v2p.get(0);
                     otherBall.speedY = v2p.get(1);
                 }
-
-
 
                 // Moves balls if they are stuck together
                 while (totalRadius > distance) {
@@ -318,25 +343,48 @@ public class Ball {
                     otherBall.slow();
                     updateRotation();
                     otherBall.updateRotation();
+
+                    // Checks and returns ball to remove on impact
+                    if(impact > 0 && otherBall.impact > 0) {
+                        if(mass > otherBall.mass) {
+                            radius += otherBall.radius*0.01;
+                            otherBall.radius *= 0.99;
+                            brighten();
+                            otherBall.brighten();
+                            updateMass();
+                            otherBall.updateMass();;
+                        } else if(otherBall.mass > mass) {
+                            otherBall.radius += radius*0.01;
+                            radius *= 0.99;
+                            brighten();
+                            otherBall.brighten();
+                            updateMass();
+                            otherBall.updateMass();
+                        }
+                        if(mass > 100000*otherBall.mass) {
+                            radius += otherBall.radius;
+                            brighten();
+                            updateMass();
+                            return otherBall;
+                        } else if(otherBall.mass > 100000*mass) {
+                            otherBall.radius += radius;
+                            otherBall.brighten();
+                            otherBall.updateMass();
+                            return this;
+                        }
+                        if(a1 > a2*100 && impact == 2) {
+                            return this;
+                        } else if(a2 > a1*100 && impact == 2) {
+                            return otherBall;
+                        }
+                    }
                 }
-
+                return null;
 
 
     }
 
-    // Performs all ball actions
-    public Ball act(Ball otherBall) {
-        if(otherBall != null) {
-            float distance = (( (this.position.x - (otherBall.position.x) ))*( (this.position.x - (otherBall.position.x) ))
-                    + ( (this.position.y) - (otherBall.position.y ))*( (this.position.y) - (otherBall.position.y )));
-            float totalRadius = (radius + otherBall.radius)*(radius + otherBall.radius);
-
-            hit(otherBall, distance, totalRadius);
-            forces(otherBall, distance, totalRadius);
-            return this;
-        } else { return this; }
-    }
-
+    // Gravity affecting balls
     private void forces(Ball otherBall, float distance, float totalRadius) {
         if (forces && totalRadius < distance) {
             FloatMatrix n = new FloatMatrix(new float[][]{{position.x - otherBall.position.x, position.y - otherBall.position.y}});
@@ -442,6 +490,12 @@ public class Ball {
         return null;
     }
 
+    // Brighten ball after mass change
+    private void brighten() {
+        float newMass = radius*radius*radius * 3.14f * massScale;
+        float brighten = newMass/mass;
+        if(brighten > 1f) { clr = new Color(clr.r*brighten, clr.g*brighten, clr.b*brighten, clr.a); }
+    }
 
     // Update mass from the radius.
     public void updateMass() {
@@ -456,7 +510,6 @@ public class Ball {
 
     // Draws ball BATCH
     public void draw(SpriteBatch batch) {
-
         batch.setColor(this.clr.r, this.clr.g, this.clr.b, this.clr.a);
         batch.draw(texture, position.x-radius, position.y-radius, radius, radius, 2*radius, 2*radius, 1, 1, rotation, 0, 0, texture.getWidth(), texture.getHeight(), false, false);
       //  batch.draw(texture, position.x-radius, position.y-radius, 2*radius, 2*radius);
@@ -482,12 +535,14 @@ public class Ball {
                 renderer.setColor(new Color(clr.r, clr.g, clr.b, alpha));
                 Ball ball = historyEntries.get(i).getBalls().get(d);
                 Ball ball2 = historyEntries.get(i + 1).getBalls().get(d);
-                renderer.circle(ball.position.x, ball.position.y, radius);
-                float angle = (float) Math.toDegrees(Math.atan((ball.position.y - ball2.position.y) / (ball.position.x - ball2.position.x)));
-                float width = (float) Math.sqrt(Math.pow(ball.position.x - ball2.position.x, 2) + Math.pow(ball.position.y - ball2.position.y, 2));
-                renderer.rect((ball.position.x + ball2.position.x) / 2 - (width / 2),
+                if(ball != null && ball2 != null){
+                    renderer.circle(ball.position.x, ball.position.y, radius);
+                    float angle = (float) Math.toDegrees(Math.atan((ball.position.y - ball2.position.y) / (ball.position.x - ball2.position.x)));
+                    float width = (float) Math.sqrt(Math.pow(ball.position.x - ball2.position.x, 2) + Math.pow(ball.position.y - ball2.position.y, 2));
+                    renderer.rect((ball.position.x + ball2.position.x) / 2 - (width / 2),
                             (ball.position.y + ball2.position.y) / 2 - radius, (width / 2), radius, width,
                             radius*2, 1f, 1f, angle);
+                }
             }
         }
     }
@@ -509,15 +564,33 @@ public class Ball {
             float alpha = clr.a*(((historyEntries.size()-i/1f)/historyEntries.size()));
             renderer.setColor(new Color(clr.r, clr.g, clr.b, alpha));
             if (d < historyEntries.get(i).getBalls().size) {
-                Ball ball = historyEntries.get(i).getBalls().get(d);
          //     renderer.circle(ball.position.x, ball.position.y, settings.zoom.camera.zoom, 180); - used before to show points
                 if (i > 0 && d < historyEntries.get(i-1).getBalls().size) {
-                    Ball ball2 = historyEntries.get(i-1).getBalls().get(d);
-                    float angle = (float) Math.toDegrees(Math.atan((ball.position.y - ball2.position.y)/(ball.position.x - ball2.position.x)));
-                    float width = (float) Math.sqrt(Math.pow(ball.position.x - ball2.position.x, 2)+Math.pow(ball.position.y - ball2.position.y, 2));
-                    renderer.rect((ball.position.x + ball2.position.x)/2 - (width/2),
-                            (ball.position.y + ball2.position.y)/2 - settings.zoom.camera.zoom, (width/2), settings.zoom.camera.zoom, width,
-                            settings.zoom.camera.zoom*2,  1f, 1f, angle );
+           //
+                    Ball ball = null;
+                    Ball ball2 = null;
+                    for(Ball searchBall : historyEntries.get(i).getBalls()) {
+                        if (nullean.getNullean() == searchBall.nullean.getNullean()) {
+                            ball = searchBall;
+                        }
+                    }
+                    for(Ball searchBall : historyEntries.get(i-1).getBalls()) {
+                        if (ball != null && ball.nullean.getNullean() == searchBall.nullean.getNullean()) {
+                            ball2 = searchBall;
+                        }
+                    }
+
+                /** This method is much faster but less accurate when removing balls.
+                    Ball ball = historyEntries.get(i).getBalls().get(d);
+                    Ball ball2 = historyEntries.get(i-1).getBalls().get(d); **/
+
+                    if(ball != null && ball2 != null && ball.touchable && ball2.touchable){
+                        float angle = (float) Math.toDegrees(Math.atan((ball.position.y - ball2.position.y)/(ball.position.x - ball2.position.x)));
+                        float width = (float) Math.sqrt(Math.pow(ball.position.x - ball2.position.x, 2)+Math.pow(ball.position.y - ball2.position.y, 2));
+                        renderer.rect((ball.position.x + ball2.position.x)/2 - (width/2),
+                                (ball.position.y + ball2.position.y)/2 - settings.zoom.camera.zoom, (width/2), settings.zoom.camera.zoom, width,
+                                settings.zoom.camera.zoom*2,  1f, 1f, angle );
+                    }
                 }
 
             }
@@ -532,5 +605,35 @@ public class Ball {
     public void setProjection(float projection) {
         this.projection = projection/getZ();
 
+    }
+
+    // Null ball and dispose it after unused
+    public Ball nullBall(int i) {
+        speedX = 0;
+        speedY = 0;
+        speedZ = 0;
+        clr = new Color(0, 0, 0, 0f);
+        set(0, 0, 0, 0);
+        setBallParameters(settings);
+        gravitation = false;
+        hits = false;
+        forces = false;
+        touchable = false;
+        mass = 0;
+        radius = 0;
+        nullean.makeNull(i);
+        return this;
+    }
+
+    public Ball isNull() {
+        if(nullean.isNull()) {
+            return this;
+        } else {
+            return null;
+        }
+    }
+
+    public void makeTrueNull(int i) {
+        nullean.makeTrueNull(i);
     }
 }
