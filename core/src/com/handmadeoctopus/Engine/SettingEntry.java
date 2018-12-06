@@ -4,7 +4,10 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.handmadeoctopus.environment.Menu;
 import com.handmadeoctopus.environment.MenuEntry;
 
-// Entry for settings
+/**
+ * Each setting is hold in the SettingEntry and creating MenuEntry and whole GUI.
+ */
+
 public class SettingEntry {
     int minVal, maxVal, value;
     boolean valueBool;

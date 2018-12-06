@@ -178,7 +178,7 @@ public class Settings {
 
     // Enum with all variables and button names.
     public enum SettingsEnum {
-        /** TODO: String and values will be changed to external file in the future **/
+        /** Very easy to use, just add new Enum value to make whole new setting in the slider **/
 
         RESET("RESET", 0, 0 ,0, true, 0),
         BALLSQUANTITY("BALLS' QUANTITY", 0, 50, 500, true, 1),
@@ -190,7 +190,7 @@ public class Settings {
         FORCES("FORCES %", -200, 10, 200, true, 6),
         SPEED("SPEED", 0, 1, 10000, false, 7),
         UNISCALE("SCALE OF UNIVERSE", 1, 10, 1000, true, 8),
-        IMPACT("IMPACT ON", 0, 1, 2, true, 11),
+        IMPACT("IMPACT ON", 0, 1, 1, true, 11),
         RELOAD("RELOAD", 0, 0, 0, true, 9);
 
 

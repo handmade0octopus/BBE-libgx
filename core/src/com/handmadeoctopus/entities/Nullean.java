@@ -1,5 +1,10 @@
 package com.handmadeoctopus.entities;
 
+/**
+    Two purposes of this class. Makes ball null so it could be removed afterwards (so it doesn't show glitches)
+    Also helps tell which ball is which as it's not copied but carried on to the next ball.
+ */
+
 class Nullean {
     private boolean beingNull = false;
     private boolean beingTrueNull = false;

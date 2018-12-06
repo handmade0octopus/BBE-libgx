@@ -203,7 +203,7 @@ public class Ball {
     }
 
     private void checkBoxBoundaries() {
-        // When ball collides with box
+        // When ball collides with the surrounding box
         if (position.x + radius + speedX > box.xMax || position.x - radius + speedX < box.xMin) {
             speedX = -springiness * speedX;
             if (position.x - radius < box.xMin) { position.x = box.xMin + radius; }
@@ -271,7 +271,7 @@ public class Ball {
         } else { return null; }
     }
 
-    // Checks if ball is hit
+    // Checks if ball is hit by another ball
     public Ball hit(Ball otherBall, float distance, float totalRadius) {
             // distSpeed is distance + speed of balls so the calculations are done for the future
             float distSpeed = ( (position.x + speedX )
@@ -606,14 +606,6 @@ public class Ball {
         }
     }
 
-    public float getZ() {
-        return position.z;
-    }
-
-    public void setProjection(float projection) {
-        this.projection = projection/getZ();
-
-    }
 
     // Null ball and dispose it after unused
     public Ball nullBall(int i) {

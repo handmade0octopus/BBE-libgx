@@ -6,6 +6,10 @@ import com.handmadeoctopus.entities.Ball;
 
 import java.math.BigInteger;
 
+/**
+ * Simple class holding arrays of Balls objects and counts year of calculation (as this is universe of balls)
+ */
+
 public class HistoryEntry {
     final Array<Ball> balls;
     BigInteger year = BigInteger.ZERO;
@@ -30,9 +34,6 @@ public class HistoryEntry {
         nextYear = BigInteger.ZERO;
     }
 
-    void setYear(BigInteger e) {
-        year = e;
-    }
 
     void addYear(int e) {
         synchronized(balls) {

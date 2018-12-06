@@ -1,6 +1,8 @@
 package com.handmadeoctopus.Engine;
 
-// Age class saves year and every ball position. It lets you calculateAll simulation further
+/** Age class saves year and every ball position. It lets you calculateAll simulation further
+ * I decided for approach with a list of objects "HistoryEntry", each holding past and future of simulation of each ball.
+ */
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -13,22 +15,20 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.*;
 
 public class Age {
 
-    public int buffer = 300;
-    private int year, calculatedYear, difference, lastSpeed = 1, drawBuffer = 100;
-    private final int MIN_BUFFER = 10, MAX_BUFFER = 15000, MIN_DRAWB = 0, MAX_DRAWB = 10000;
+    private int buffer = 300, drawBuffer = 100;; // Base value of buffer and drawBuffer, it's got changed
+    private int year, calculatedYear, difference, lastSpeed = 1; // Variables to control the current year and year that is calculated
+    private final int MIN_BUFFER = 10, MAX_BUFFER = 15000, MIN_DRAWB = 0, MAX_DRAWB = 10000; // Constants to control maximum and minimum buffer values
     private float averageFPS = 0;
     private int numberOfFrames = 0;
-    public HistoryEntry drawYear;
-    private Array<Ball> newYear, balls;
-    private List<HistoryEntry> history, tempPath = null;
-    private boolean sameFrame = false;
+    public HistoryEntry drawYear; // drawYear is current year that is being drawn
+    private Array<Ball> newYear, balls; // They hold temp balls
+    private List<HistoryEntry> history, tempPath = null; // History is main list of HistoryEntries - meaning years of calculation, tempPath is not lazy programing (!!!), it's actually used only after input change to smooth out the visual.
+    // Just placeholders.
     Settings settings;
     MainEngine mainEngine;
     ThreadPoolExecutor calculateThread;

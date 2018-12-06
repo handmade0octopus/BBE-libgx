@@ -5,6 +5,7 @@ public class TaskRun implements Runnable {
 
     Age age;
 
+    // Created in Age class, runs calculations on separate thread
     public TaskRun(Age age) {
         this.age = age;
     }

@@ -7,7 +7,8 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.handmadeoctopus.entities.Ball;
 
-// Zoom class handles all zoom instances
+// Zoom class handles all zoom instances (pinch on android or scroll on PC)
+
 public class Zoom {
     public OrthographicCamera camera, uiCamera;
     boolean zooming = false;
